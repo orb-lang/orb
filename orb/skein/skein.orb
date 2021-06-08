@@ -472,6 +472,9 @@ local function new(path, lume)
       error "Skein must be constructed with a path"
    end
    -- handles: string, Path, or File objects
+   if type(path) == 'string' then
+      path = Path(path)
+   end
    if path.idEst ~= File then
       path = File(Path(path):absPath())
    end
