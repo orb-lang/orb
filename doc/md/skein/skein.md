@@ -497,6 +497,7 @@ local function new(path, lume)
 
    skein.source.relpath = Path(tostring(path)):relPath(skein.source_base)
    skein.source.file = path
+   skein.source.name = path:basename():sub(1, -1 - #path:extension())
    return skein
 end
 

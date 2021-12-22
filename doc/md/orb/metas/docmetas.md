@@ -38,7 +38,7 @@ This is a convenience function for working with Docs inside `helm`\.
 ```lua
 local Skein;
 function Doc_M.toSkein(doc)
-   Skein = Skein or require "orb:orb/skein"
+   Skein = Skein or require "orb:skein/skein"
 end
 ```
 
@@ -58,13 +58,15 @@ document structure\.
 Right now, Lua is suppported\.
 
 ```lua
+local insert = assert(table.insert)
+
 local lua_chunker;
 
 local function lua_codebodies(doc)
    local bodies = Deque()
    for codeblock in doc :select "codeblock" do
       if codeblock:select "code_type" () :span() == 'lua' then
-         bodies:push(codeblock :select "code_body"())
+         bodies:push(codeblock :select "code_body"() )
       end
    end
    return function()
@@ -76,7 +78,22 @@ function Doc_M.parsedCodeblocks(doc)
    lua_chunker = lua_chunker or require "lun:lua-parser"
                                    :ruleOfName "chunk"
                                    :toPeg() . parse
-   return lua_chunker, lua_codebodies(doc)
+   local parse_info = {}
+   for lua in lua_codebodies(doc) do
+      local code_line = lua:linePos()
+      local chunk = lua_chunker(lua:span())
+      local err, col = chunk:errorAt()
+      if err then
+         insert(parse_info, { error = true,
+                              code_line = code_line,
+                              line = err,
+                              col  = col })
+      else
+         insert(parse_info, { error = false,
+                              code_line = code_line })
+      end
+   end
+   return parse_info
 end
 ```
 

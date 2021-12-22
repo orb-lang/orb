@@ -182,8 +182,11 @@ function Ref.resolveLink(ref, skein, extension)
       project = man_ref.project_path or skein.lume.project
    end
    url = url  .. project .. "/"
-   if not doc_path then
-      return url
+   -- stringify doc path defaulting to skein name
+   if doc_path == "" then
+      doc_path = skein.source.name
+   else
+      doc_path = doc_path:span()
    end
    url = url .. (man_ref.post_project or "MISSING_POST_PROJECT")
    -- extension directory
@@ -194,7 +197,7 @@ function Ref.resolveLink(ref, skein, extension)
    if ext_dir then
       url = url .. ext_dir
    end
-   url = url .. doc_path:span() .. "." .. extension
+   url = url .. doc_path .. "." .. extension
    if fragment then
       url = url .. "#" .. fragment:span()
    end
