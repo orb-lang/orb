@@ -141,13 +141,10 @@ after.
 Generally, the state created and manipulated by method calls is attached to
 the skein itself.
 
-Methods are listed in the order in which they are expected to be executed.
-Some (knit and weave, notably) will probably function correctly in another
-order, while others will not; certainly we can't process anything without
-loading it in some fashion.
-
-We may offer an affordance for working outside the filesystem, but we surely
-don't need it now.
+The order in which these steps are performed is crucial, and there's no
+guarantee they will only hapen once.  So a Skein will do its best to perform
+any prior steps which either haven't happened, or need to happen again, when
+a given operation is requested.
 
 
 *** Skein:load()
