@@ -321,7 +321,7 @@ function Lume.run(lume)
          return
       end
 
-      for _, skein in pairs(lume.ondeck) do
+      for _, skein in pairs(lume.inflight) do
          s:verb("retry on %s", tostring(skein.source.file))
          local ok, err = xpcall(skein:transform(), debug.traceback)
          if not ok then
@@ -393,12 +393,12 @@ local create, resume, running, yield = assert(coroutine.create),
 local function _loader(skein, lume, path)
    s:verb("begin read of %s", path)
    local co = running()
-   lume.ondeck[co] = skein
-   skein -- :load() :spin() -- :tag() --:tagAct() -- :knit()
-      :weave() :compile()
+   lume.inflight[co] = skein
+   skein :load() -- yields
+      :spin() :tag() :tagAct()  :knit() :weave() :compile()
    s:verb("processed: %s", path)
    lume.count = lume.count - 1
-   lume.ondeck[co] = nil
+   lume.inflight[co] = nil
    lume.rack:insert(co)
    local stmts, ids, git_info, now = yield()
    skein:commit(stmts, ids, git_info, now)
@@ -410,7 +410,7 @@ function Lume.bundle(lume)
    lume.count = 0
    -- #todo this is, ideally, temporary; we need it while things can still
    -- break.
-   lume.ondeck = {}
+   lume.inflight = {}
    -- bail early if there's nothing on the shuttle
    if lume.shuttle:isEmpty() then return lume end
    repeat
@@ -459,7 +459,7 @@ function Lume.persist(lume)
       end
       if lume.count > 0 then return end
       -- report failed coroutines
-      for _, skein in pairs(lume.ondeck) do
+      for _, skein in pairs(lume.inflight) do
          s:verb("failed to process: %s", tostring(skein.source.file))
       end
       -- set up transaction
