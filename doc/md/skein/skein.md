@@ -148,30 +148,27 @@ after\.
 Generally, the state created and manipulated by method calls is attached to
 the skein itself\.
 
-Methods are listed in the order in which they are expected to be executed\.
-Some \(knit and weave, notably\) will probably function correctly in another
-order, while others will not; certainly we can't process anything without
-loading it in some fashion\.
-
-We may offer an affordance for working outside the filesystem, but we surely
-don't need it now\.
+The order in which these steps are performed is crucial, and there's no
+guarantee they will only hapen once\.  So a Skein will do its best to perform
+any prior steps which either haven't happened, or need to happen again, when
+a given operation is requested\.
 
 
 ### Skein:load\(\)
 
 This loads the Path data into the `skein.source.text` field\.
 
-If called inside a coroutine and uv even loop, this uses a callback, allowing
+If called inside a coroutine and uv event loop, this uses a callback, allowing
 us to employ the threadpool for parallelizing the syscall and read penalty\.
 
 ```lua
 function Skein.load(skein)
-   assert(skein.source.file, "no file on skein")
-   local ok, text = pcall(skein.source.file.read, skein.source.file)
+   local file = assert(skein.source.file, "no file on skein")
+   local ok, text = pcall(file.read, file)
    if ok then
       skein.source.text = text
    else
-      s:complain("fail on load %s: %s", tostring(skein.source.file), text)
+      s:complain("fail on load %s: %s", tostring(file), text)
    end
    return skein
 end
@@ -188,6 +185,9 @@ Currently a no\-op\.
 
 ```lua
 function Skein.filter(skein)
+   if not skein.source.text then
+      skein:load()
+   end
    return skein
 end
 ```

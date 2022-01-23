@@ -155,16 +155,13 @@ Skein.__index = Skein
 
 
 
-
-
-
 function Skein.load(skein)
-   assert(skein.source.file, "no file on skein")
-   local ok, text = pcall(skein.source.file.read, skein.source.file)
+   local file = assert(skein.source.file, "no file on skein")
+   local ok, text = pcall(file.read, file)
    if ok then
       skein.source.text = text
    else
-      s:complain("fail on load %s: %s", tostring(skein.source.file), text)
+      s:complain("fail on load %s: %s", tostring(file), text)
    end
    return skein
 end
@@ -181,6 +178,9 @@ end
 
 
 function Skein.filter(skein)
+   if not skein.source.text then
+      skein:load()
+   end
    return skein
 end
 

@@ -641,22 +641,13 @@ supports only Linux.
 
   Ransacks a directory and puts stuff in the lume.
 
-This is a shim to free the Deck to be what it needs to be instead of what it
-is now, which is a pointlessly fancy shuttle loader.
+There might come a time when =.orb= isn't an infallible guide to orb-ness, but
+it is right now.
 
 #!lua
--- ignore a few critters that can show up
-local decIgnore = {".DS_Store", ".git"}
 
 local function ignore(file)
-   local willIgnore = false
-   local basename = file:basename()
-   for _, str in ipairs(decIgnore) do
-      willIgnore = willIgnore or basename == str
-   end
-   -- Goddammit Dropbox
-   willIgnore = willIgnore or (string.find(tostring(file), "%.%_") ~= nil)
-   return willIgnore
+   return file:extension() == 'orb'
 end
 
 local function case(lume, dir)

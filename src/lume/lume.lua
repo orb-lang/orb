@@ -94,6 +94,23 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local uv = require "luv"
 local sql = assert(sql)
 
@@ -629,6 +646,56 @@ end
 
 
 
+local function ignore(file)
+   return file:extension() == 'orb'
+end
+
+local function case(lume, dir)
+   s:verb("dir: %s", tostring(dir))
+   dir = type(dir) == 'string' and assert(Dir(dir))
+                      or dir.idEst == Dir and dir
+                      or error "#2 must be a directory or path string"
+   assert(dir:exists(), "passed directory doesn't exist")
+   local basename = dir:basename()
+   local lumeRoot = lume.root:basename()
+   s:verb("root: " .. tostring(lume.root) .. " base: " ..tostring(lumeRoot))
+   local subdirs = dir:getsubdirs()
+   s:verb("  " .. "# subdirs: " .. #subdirs)
+   for i, sub in ipairs(subdirs) do
+      case(lume, dir)
+   end
+   local files = dir:getfiles()
+   s:verb("  " .. "# files: " .. #files)
+   for i, file in ipairs(files) do
+      if not ignore(file) then
+         lume.shuttle:push(file)
+         --[[not using eponyms, if it doesn't come up, delete this
+         local name = file:basename()
+         if #file:extension() > 1 then
+            name = string.sub(name, 1, - #file:extension() - 1)
+         end
+         if name == basename then
+            s:verb("  ~ " .. name)
+            deck.eponym = file
+         end
+         --]]
+      end
+   end
+
+   s:verb("#deck is : " .. #deck)
+   return lume
+end
+
+
+
+
+
+
+
+
+
+
+
 
 
 local function _findSubdirs(lume, dir)
@@ -738,6 +805,17 @@ local function new(dir, db_conn, no_write)
    lume.pedantic = _Bridge.args.pedantic and true or false
    lume.well_formed = _findSubdirs(lume, dir)
    if lume.well_formed then
+
+
+
+
+
+
+
+
+
+
+
       lume.deck = Deck(lume, lume.orb)
    else
       -- this will probably break currently, but the end goal of

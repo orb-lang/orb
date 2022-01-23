@@ -38,6 +38,23 @@ We may build an "overwatch" mode, which assumes all subdirectories might be
 codex\-normal, and sets up a lume for each, but this will live elsewhere\.
 
 
+### Extension
+
+This pass is about making orb robust, and much of the current fragility is
+embodied in the current Lume implementation\.
+
+The reliance on the structure of the directory is no longer useful nor
+necessary\.  The intention was always that Orb would operate according to
+useful defaults: that it would understand the codex form but not be restricted
+to it\.  With the manifest system we can be as flexible as we wish, and the
+upcoming orb\.sqlite database will enable much more fine\-grained handling of
+the complete document and codex lifecycle\.
+
+The Lume is descended from a simple recursive directory walker and retains
+many of those traits, which it needs to unlearn\.
+
+
+
 ### Vocabulary
 
 \#Todo
@@ -623,6 +640,56 @@ there's been work to remove that limit but only in RaptorJIT, which in turn
 supports only Linux\.
 
 
+## case\(lume, dir\)
+
+  Ransacks a directory and puts stuff in the lume\.
+
+There might come a time when `.orb` isn't an infallible guide to orb\-ness, but
+it is right now\.
+
+```lua
+
+local function ignore(file)
+   return file:extension() == 'orb'
+end
+
+local function case(lume, dir)
+   s:verb("dir: %s", tostring(dir))
+   dir = type(dir) == 'string' and assert(Dir(dir))
+                      or dir.idEst == Dir and dir
+                      or error "#2 must be a directory or path string"
+   assert(dir:exists(), "passed directory doesn't exist")
+   local basename = dir:basename()
+   local lumeRoot = lume.root:basename()
+   s:verb("root: " .. tostring(lume.root) .. " base: " ..tostring(lumeRoot))
+   local subdirs = dir:getsubdirs()
+   s:verb("  " .. "# subdirs: " .. #subdirs)
+   for i, sub in ipairs(subdirs) do
+      case(lume, dir)
+   end
+   local files = dir:getfiles()
+   s:verb("  " .. "# files: " .. #files)
+   for i, file in ipairs(files) do
+      if not ignore(file) then
+         lume.shuttle:push(file)
+         --[[not using eponyms, if it doesn't come up, delete this
+         local name = file:basename()
+         if #file:extension() > 1 then
+            name = string.sub(name, 1, - #file:extension() - 1)
+         end
+         if name == basename then
+            s:verb("  ~ " .. name)
+            deck.eponym = file
+         end
+         --]]
+      end
+   end
+
+   s:verb("#deck is : " .. #deck)
+   return lume
+end
+```
+
 ####  \_findSubdirs\(lume, dir\)
 
   Called by the constructor to find the directories for knitted and woven
@@ -741,6 +808,17 @@ local function new(dir, db_conn, no_write)
    lume.pedantic = _Bridge.args.pedantic and true or false
    lume.well_formed = _findSubdirs(lume, dir)
    if lume.well_formed then
+```
+
+So here is where we start to get into trouble\.
+
+The deck should be a way of organizing skeins if it's anything\.
+
+Right now it jusb\-t loads the shuttle like so many shotgun shells and does
+nothing else of interest, this also pointlessly conceals the operation of the
+lume from view\.
+
+```lua
       lume.deck = Deck(lume, lume.orb)
    else
       -- this will probably break currently, but the end goal of
