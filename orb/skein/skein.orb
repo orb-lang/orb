@@ -151,17 +151,17 @@ a given operation is requested.
 
 This loads the Path data into the =skein.source.text= field.
 
-If called inside a coroutine and uv even loop, this uses a callback, allowing
+If called inside a coroutine and uv event loop, this uses a callback, allowing
 us to employ the threadpool for parallelizing the syscall and read penalty.
 
 #!lua
 function Skein.load(skein)
-   assert(skein.source.file, "no file on skein")
-   local ok, text = pcall(skein.source.file.read, skein.source.file)
+   local file = assert(skein.source.file, "no file on skein")
+   local ok, text = pcall(file.read, file)
    if ok then
       skein.source.text = text
    else
-      s:complain("fail on load %s: %s", tostring(skein.source.file), text)
+      s:complain("fail on load %s: %s", tostring(file), text)
    end
    return skein
 end
@@ -178,6 +178,9 @@ Currently a no-op.
 
 #!lua
 function Skein.filter(skein)
+   if not skein.source.text then
+      skein:load()
+   end
    return skein
 end
 #/lua
