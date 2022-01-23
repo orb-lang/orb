@@ -394,7 +394,8 @@ local function _loader(skein, lume, path)
    s:verb("begin read of %s", path)
    local co = running()
    lume.ondeck[co] = skein
-   skein :load() :spin() :tag() :tagAct() :knit() :weave() :compile()
+   skein -- :load() :spin() -- :tag() --:tagAct() -- :knit()
+      :weave() :compile()
    s:verb("processed: %s", path)
    lume.count = lume.count - 1
    lume.ondeck[co] = nil
@@ -646,6 +647,8 @@ end
 
 
 
+
+
 local function ignore(file)
    return file:extension() == 'orb'
 end
@@ -669,16 +672,6 @@ local function case(lume, dir)
    for i, file in ipairs(files) do
       if not ignore(file) then
          lume.shuttle:push(file)
-         --[[not using eponyms, if it doesn't come up, delete this
-         local name = file:basename()
-         if #file:extension() > 1 then
-            name = string.sub(name, 1, - #file:extension() - 1)
-         end
-         if name == basename then
-            s:verb("  ~ " .. name)
-            deck.eponym = file
-         end
-         --]]
       end
    end
 

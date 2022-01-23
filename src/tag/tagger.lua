@@ -355,7 +355,13 @@ end
 
 
 
+
+
+
 return function(skein)
+   if not skein.source.doc then
+      skein:spin()
+   end
    local ok, res = xpcall(function() return Tagger(skein) end, debug.traceback)
    if ok then return skein end
    skein.note("error: %s", res)

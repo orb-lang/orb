@@ -78,7 +78,7 @@ contexts:
     - match: '(^|\s)\*\*((?!\*\*).)+\*\*'
       scope: markup.bold.orb
 
-    - match: '(^|\s)\*[^/]+\*'
+    - match: '(^|\s)\*[^\*]+\*'
       scope: markup.bold.orb
 
     # @Handles

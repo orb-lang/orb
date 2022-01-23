@@ -202,7 +202,9 @@ in\-place expansion of notebook\-style live documents\.
 
 ```lua
 function Skein.spin(skein)
-   assert(skein.source.text, "no text on skein, call :load or check path")
+   if not skein.source.text then
+      skein:load()
+   end
    local ok, doc = pcall(Doc, skein.source.text)
    if not ok then
        s:complain("couldn't make doc: %s, %s", doc, tostring(skein.source.file))
@@ -244,6 +246,12 @@ instance of the Manifest, and adding the contents\.
 
 ```lua
 function Skein.tagAct(skein)
+   if not skein.tags then
+      skein:tag()
+   end
+   -- this will most likely turn into a table because tag actions are a /very/
+   -- complex stage.
+   skein.tag_acted = true
    local mani_blocks = skein.tags.manifest
    if mani_blocks then
       Manifest = require "orb:manifest/manifest"
@@ -267,6 +275,9 @@ Referred to as a 'tangle' in the traditional literate coding style\.
 
 ```lua
 function Skein.knit(skein)
+   if not skein.tag_acted then
+      skein:tagAct()
+   end
    local ok, err = pcall(knitter.knit, knitter, skein)
    if not ok then
       s:complain("failure to knit %s: %s", tostring(skein.source.file), err)
@@ -298,6 +309,9 @@ itself\.
 
 ```lua
 function Skein.weave(skein)
+   if not skein.knitted then
+      skein:knit()
+   end
    if not skein.woven then
       skein.woven = {}
    end

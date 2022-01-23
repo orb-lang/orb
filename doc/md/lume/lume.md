@@ -397,7 +397,8 @@ local function _loader(skein, lume, path)
    s:verb("begin read of %s", path)
    local co = running()
    lume.ondeck[co] = skein
-   skein :load() :spin() :tag() :tagAct() :knit() :weave() :compile()
+   skein -- :load() :spin() -- :tag() --:tagAct() -- :knit()
+      :weave() :compile()
    s:verb("processed: %s", path)
    lume.count = lume.count - 1
    lume.ondeck[co] = nil
@@ -647,8 +648,10 @@ supports only Linux\.
 There might come a time when `.orb` isn't an infallible guide to orb\-ness, but
 it is right now\.
 
-```lua
+\#Todo
+this by fid, which we can get\.
 
+```lua
 local function ignore(file)
    return file:extension() == 'orb'
 end
@@ -672,16 +675,6 @@ local function case(lume, dir)
    for i, file in ipairs(files) do
       if not ignore(file) then
          lume.shuttle:push(file)
-         --[[not using eponyms, if it doesn't come up, delete this
-         local name = file:basename()
-         if #file:extension() > 1 then
-            name = string.sub(name, 1, - #file:extension() - 1)
-         end
-         if name == basename then
-            s:verb("  ~ " .. name)
-            deck.eponym = file
-         end
-         --]]
       end
    end
 
@@ -814,7 +807,7 @@ So here is where we start to get into trouble\.
 
 The deck should be a way of organizing skeins if it's anything\.
 
-Right now it jusb\-t loads the shuttle like so many shotgun shells and does
+Right now it just loads the shuttle like so many shotgun shells and does
 nothing else of interest, this also pointlessly conceals the operation of the
 lume from view\.
 
