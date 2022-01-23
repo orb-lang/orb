@@ -119,7 +119,7 @@ s.verbose = false
 
 local git_info = require "orb:util/gitinfo"
 local Skein    = require "orb:skein/skein"
-local Deck     = require "orb:lume/deck"
+-- local Deck     = require "orb:lume/deck"
 local Watcher  = require "orb:lume/watcher"
 local Manifest = require "orb:manifest/manifest"
 local database = require "orb:compile/database"
@@ -570,6 +570,7 @@ function Lume.projectInfo(lume)
    if lume.git_info.is_repo then
       proj.repo_type = "git"
       proj.repo = lume.git_info.url
+      -- #Todo read these from manifest if provided
       proj.home = lume.home or ""
       proj.website = lume.website or ""
       local alts = {}
@@ -649,23 +650,33 @@ end
 
 
 
+
+
+
+
+
 local function ignore(file)
    return file:extension() == 'orb'
+       or file:basename():sub(1,1) == '.'
 end
 
-local function case(lume, dir)
+local function case(lume, dir, dupes)
+   dupes = dupes or {}
    s:verb("dir: %s", tostring(dir))
    dir = type(dir) == 'string' and assert(Dir(dir))
                       or dir.idEst == Dir and dir
                       or error "#2 must be a directory or path string"
    assert(dir:exists(), "passed directory doesn't exist")
-   local basename = dir:basename()
-   local lumeRoot = lume.root:basename()
-   s:verb("root: " .. tostring(lume.root) .. " base: " ..tostring(lumeRoot))
+   ---[[ deduplicate by inode, not string
+   local ino = dir:attributes().ino
+   if dupes[ino] then return end
+   dupes[ino] = true
+   --]]
+   s:verb("casing %s", tostring(dir))
    local subdirs = dir:getsubdirs()
    s:verb("  " .. "# subdirs: " .. #subdirs)
    for i, sub in ipairs(subdirs) do
-      case(lume, dir)
+      case(lume, sub)
    end
    local files = dir:getfiles()
    s:verb("  " .. "# files: " .. #files)
@@ -674,8 +685,6 @@ local function case(lume, dir)
          lume.shuttle:push(file)
       end
    end
-
-   s:verb("#deck is : " .. #deck)
    return lume
 end
 
@@ -798,6 +807,7 @@ local function new(dir, db_conn, no_write)
    lume.pedantic = _Bridge.args.pedantic and true or false
    lume.well_formed = _findSubdirs(lume, dir)
    if lume.well_formed then
+      case(lume, lume.orb)
 
 
 
@@ -808,8 +818,6 @@ local function new(dir, db_conn, no_write)
 
 
 
-
-      lume.deck = Deck(lume, lume.orb)
    else
       -- this will probably break currently, but the end goal of
       -- this architecture is to try and do something more sensible

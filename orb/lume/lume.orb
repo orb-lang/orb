@@ -119,7 +119,7 @@ s.verbose = false
 
 local git_info = require "orb:util/gitinfo"
 local Skein    = require "orb:skein/skein"
-local Deck     = require "orb:lume/deck"
+-- local Deck     = require "orb:lume/deck"
 local Watcher  = require "orb:lume/watcher"
 local Manifest = require "orb:manifest/manifest"
 local database = require "orb:compile/database"
@@ -570,6 +570,7 @@ function Lume.projectInfo(lume)
    if lume.git_info.is_repo then
       proj.repo_type = "git"
       proj.repo = lume.git_info.url
+      -- #Todo read these from manifest if provided
       proj.home = lume.home or ""
       proj.website = lume.website or ""
       local alts = {}
@@ -645,27 +646,35 @@ supports only Linux.
 There might come a time when =.orb= isn't an infallible guide to orb-ness, but
 it is right now.
 
-#Todo this is *recursive* and *does not check for duplicates*.  It should do
-this by fid, which we can get.
+
+*** Making Decks in the casing process
+
+The Deck abstraction was recently removed, because everything it was doing is
+seen below.
+
+It's time to add it back, and this time have it do what it's meant to,
 
 #!lua
 local function ignore(file)
    return file:extension() == 'orb'
+       or file:basename():sub(1,1) == '.'
 end
 
-local function case(lume, dir)
+local function case(lume, dir, dupes)
+   dupes = dupes or {}
    s:verb("dir: %s", tostring(dir))
    dir = type(dir) == 'string' and assert(Dir(dir))
                       or dir.idEst == Dir and dir
                       or error "#2 must be a directory or path string"
    assert(dir:exists(), "passed directory doesn't exist")
-   local basename = dir:basename()
-   local lumeRoot = lume.root:basename()
-   s:verb("root: " .. tostring(lume.root) .. " base: " ..tostring(lumeRoot))
+   local ino = dir:attributes().ino
+   if dupes[ino] then return end
+   dupes[ino] = true
+   s:verb("casing %s", tostring(dir))
    local subdirs = dir:getsubdirs()
    s:verb("  " .. "# subdirs: " .. #subdirs)
    for i, sub in ipairs(subdirs) do
-      case(lume, dir)
+      case(lume, sub)
    end
    local files = dir:getfiles()
    s:verb("  " .. "# files: " .. #files)
@@ -674,8 +683,6 @@ local function case(lume, dir)
          lume.shuttle:push(file)
       end
    end
-
-   s:verb("#deck is : " .. #deck)
    return lume
 end
 #/lua
@@ -798,18 +805,17 @@ local function new(dir, db_conn, no_write)
    lume.pedantic = _Bridge.args.pedantic and true or false
    lume.well_formed = _findSubdirs(lume, dir)
    if lume.well_formed then
+      case(lume, lume.orb)
 #/lua
 
 So here is where we start to get into trouble.
 
 The deck should be a way of organizing skeins if it's anything.
 
-Right now it just loads the shuttle like so many shotgun shells and does
-nothing else of interest, this also pointlessly conceals the operation of the
-lume from view.
+removed until further notice.
+
 
 #!lua
-      lume.deck = Deck(lume, lume.orb)
    else
       -- this will probably break currently, but the end goal of
       -- this architecture is to try and do something more sensible
