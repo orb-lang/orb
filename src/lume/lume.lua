@@ -438,8 +438,19 @@ end
 
 
 
+
+
+
+function Lume.stillBundling(lume)
+   return (lume.count > 0) or (not lume.git_info.complete)
+end
+
+
+
 local commitBundle, commitSkein = assert(database.commitBundle),
                                   assert(database.commitSkein)
+
+local BAIL_AT = 2048
 
 function Lume.persist(lume)
    local transactor, persistor = uv.new_idle(), uv.new_idle()
@@ -455,11 +466,12 @@ function Lume.persist(lume)
          s:verb("lume.count: %d", lume.count)
          report = report * 2
       end
-      if check > 512 then
+      if check > BAIL_AT then
          s:warn("bailing. lume.count: %d", lume.count)
          lume.count = 0
       end
-      if lume.count > 0 then return end
+      if lume:stillBundling() then return end
+      s:chat("done bundling, setting up transaction")
       -- report failed coroutines
       for _, skein in pairs(lume.inflight) do
          s:verb("failed to process: %s", tostring(skein.source.file))

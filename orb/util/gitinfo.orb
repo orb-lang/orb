@@ -13,6 +13,8 @@ local Dir = require "fs:directory"
 local lines = assert(require "core:core/string" . lines)
 local insert = assert(table.insert)
 
+local s = require "status:status" ()
+s.verbose = false
 
 local spawn = require "proc:spawn"
 
@@ -25,18 +27,24 @@ local function gitInfo(path)
 
       local git_branch = spawn("git", {"branch", cwd = path})
       local branches = assert(git_branch:read())
+      s:verb "returned with branches:"
       for branch in lines(branches) do
+         s:verb(branch)
          if branch:sub(1,1) == "*" then
             git_info.branch = branch:sub(3)
          end
       end
-      local remotes = spawn("git", {"remote", cwd = path}) :read()
 
+      local git_remote = spawn("git", {"remote", cwd = path})
+      local remotes = git_remote:read()
+      s:verb "return with remotes: "
       git_info.remotes = {}
       if remotes then
          for remote in lines(remotes) do
+            s:verb("fetching url for %s", remote)
             local url = spawn("git", {"remote", "get-url", remote, cwd = path})
                            :read()
+            s:verb("back with url: %s", url)
             if remote == "origin" then
                git_info.url = url
             end
@@ -48,6 +56,8 @@ local function gitInfo(path)
       end
       git_info.commit_hash = spawn("git", {"rev-parse", "HEAD", cwd = path})
                                 :read()
+      s:verb("the commit hash is %s, that's all folks!", git_info.commit_hash)
+      git_info.complete = true
    end)()
 
    else
