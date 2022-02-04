@@ -670,11 +670,9 @@ local function case(lume, dir, dupes)
                       or dir.idEst == Dir and dir
                       or error "#2 must be a directory or path string"
    assert(dir:exists(), "passed directory doesn't exist")
-   ---[[ deduplicate by inode, not string
    local ino = dir:attributes().ino
    if dupes[ino] then return end
    dupes[ino] = true
-   --]]
    s:verb("casing %s", tostring(dir))
    local subdirs = dir:getsubdirs()
    s:verb("  " .. "# subdirs: " .. #subdirs)
