@@ -301,7 +301,7 @@ second bundle when the watcher quits\.
 ```lua
 function Lume.run(lume)
    -- determine if we need to start the loop
-   local loop_alive = uv.loop_alive()
+   local loop_mode = uv.loop_mode()
    local launcher = uv.new_idle()
    local launch_running = true
    launcher:start(function()
@@ -310,12 +310,12 @@ function Lume.run(lume)
       launch_running = false
    end)
 
-   if not loop_alive then
+   if not loop_mode then
       s:chat "running loop"
       uv.run 'default'
    end
 
-   loop_alive = uv.loop_alive()
+   local loop_alive = uv.loop_alive()
    -- if there are remaining (hence broken) coroutines, run the skein again,
    -- to try and catch the error:
    local retrier = uv.new_idle()
@@ -440,14 +440,27 @@ files\.
 Currently there is a check variable that runs the transactor 512 times and
 then forces the issue\.
 
+
+#### Lume:stillBundling\(\)
+
+```lua
+function Lume.stillBundling(lume)
+   return (lume.count > 0) or (not lume.git_info.complete)
+end
+```
+
 ```lua
 local commitBundle, commitSkein = assert(database.commitBundle),
                                   assert(database.commitSkein)
+
+local BAIL_AT = 2048
 
 function Lume.persist(lume)
    local transactor, persistor = uv.new_idle(), uv.new_idle()
    lume.transacting, lume.persisting = true, true
    local check, report = 0, 1
+
+   local git_info = lume.git_info
 
    transactor:start(function()
       -- watch for next phase
@@ -456,11 +469,12 @@ function Lume.persist(lume)
          s:verb("lume.count: %d", lume.count)
          report = report * 2
       end
-      if check > 512 then
+      if check > BAIL_AT then
          s:warn("bailing. lume.count: %d", lume.count)
          lume.count = 0
       end
-      if lume.count > 0 then return end
+      if lume:stillBundling() then return end
+      s:chat("done bundling, setting up transaction")
       -- report failed coroutines
       for _, skein in pairs(lume.inflight) do
          s:verb("failed to process: %s", tostring(skein.source.file))
@@ -468,7 +482,6 @@ function Lume.persist(lume)
       -- set up transaction
       local conn = lume.conn
       local stmts, ids, now = commitBundle(lume)
-      local git_info = lume:gitInfo()
       -- cache db info for later commits
       lume.db = { stmts    = stmts,
                   ids      = ids,
@@ -549,7 +562,6 @@ end
 The git info for a lume can change during runtime, this method will refresh
 it\.
 
-\#todo
 
 ```lua
 function Lume.gitInfo(lume)
@@ -656,6 +668,7 @@ The Deck abstraction was recently removed, because everything it was doing is
 seen below\.
 
 It's time to add it back, and this time have it do what it's meant to,
+
 
 ```lua
 local function ignore(file)
@@ -828,6 +841,7 @@ removed until further notice\.
    lume.manifest = _makeManifest(lume)
    lume.project = dir.path[#dir.path]
    lume.git_info = git_info(tostring(dir))
+   uv.run 'once'
    lume.net = setmetatable({}, Net)
    lume.net.lume = lume
    _Lumes[dir] = lume

@@ -13,24 +13,38 @@ local Dir = require "fs:directory"
 local lines = assert(require "core:core/string" . lines)
 local insert = assert(table.insert)
 
+local s = require "status:status" ()
+s.verbose = false
+
+local spawn = require "proc:spawn"
+
 local function gitInfo(path)
    local git_info = {}
    if Dir(path.."/.git"):exists() then
-      -- wrap path in 'literal shell string'
-      local sh_path = "'" ..path:gsub("'", "'\\''") .. "'"
-      local git = sh.command ("cd " .. sh_path .. " && git")
+      coroutine.wrap(function()
       git_info.is_repo = true
-      local branches = tostring(git "branch")
+      git_info.with_spawn = true
+
+      local git_branch = spawn("git", {"branch", cwd = path})
+      local branches = assert(git_branch:read())
+      s:verb "returned with branches:"
       for branch in lines(branches) do
+         s:verb(branch)
          if branch:sub(1,1) == "*" then
             git_info.branch = branch:sub(3)
          end
       end
-      local remotes = tostring(git "remote")
-      if remotes and (not remotes:find "usage:") then
-         git_info.remotes = {}
+
+      local git_remote = spawn("git", {"remote", cwd = path})
+      local remotes = git_remote:read()
+      s:verb "return with remotes: "
+      git_info.remotes = {}
+      if remotes then
          for remote in lines(remotes) do
-            local url = tostring(git("remote", "get-url", remote))
+            s:verb("fetching url for %s", remote)
+            local url = spawn("git", {"remote", "get-url", remote, cwd = path})
+                           :read()
+            s:verb("back with url: %s", url)
             if remote == "origin" then
                git_info.url = url
             end
@@ -40,7 +54,12 @@ local function gitInfo(path)
             git_info.url = git_info.remotes[1] and git_info.remotes[1][2]
          end
       end
-      git_info.commit_hash = tostring(git("rev-parse", "HEAD"))
+      git_info.commit_hash = spawn("git", {"rev-parse", "HEAD", cwd = path})
+                                :read()
+      s:verb("the commit hash is %s, that's all folks!", git_info.commit_hash)
+      git_info.complete = true
+   end)()
+
    else
       git_info.is_repo = false
    end
