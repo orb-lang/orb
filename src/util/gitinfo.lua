@@ -19,22 +19,23 @@ local spawn = require "proc:spawn"
 local function gitInfo(path)
    local git_info = {}
    if Dir(path.."/.git"):exists() then
-      -- wrap path in 'literal shell string'
-      local sh_path = "'" ..path:gsub("'", "'\\''") .. "'"
-      local git = sh.command ("cd " .. sh_path .. " && git")
+      coroutine.wrap(function()
       git_info.is_repo = true
+      git_info.with_spawn = true
 
-      local branches = spawn("git", {"branch", cwd = path, block = true}) :read()
+      local git_branch = spawn("git", {"branch", cwd = path})
+      local branches = assert(git_branch:read())
       for branch in lines(branches) do
          if branch:sub(1,1) == "*" then
             git_info.branch = branch:sub(3)
          end
       end
-      local remotes = spawn("git", {"remote", cwd = path, block = true}) :read()
-      if remotes and (not remotes:find "usage:") then
-         git_info.remotes = {}
+      local remotes = spawn("git", {"remote", cwd = path}) :read()
+
+      git_info.remotes = {}
+      if remotes then
          for remote in lines(remotes) do
-            local url = spawn("git", {"remote", "get-url", remote, cwd = path, block = true})
+            local url = spawn("git", {"remote", "get-url", remote, cwd = path})
                            :read()
             if remote == "origin" then
                git_info.url = url
@@ -45,8 +46,9 @@ local function gitInfo(path)
             git_info.url = git_info.remotes[1] and git_info.remotes[1][2]
          end
       end
-      git_info.commit_hash = spawn("git", {"rev-parse", "HEAD", cwd = path, block = true})
+      git_info.commit_hash = spawn("git", {"rev-parse", "HEAD", cwd = path})
                                 :read()
+   end)()
 
    else
       git_info.is_repo = false

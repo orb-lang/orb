@@ -298,7 +298,7 @@ end
 
 function Lume.run(lume)
    -- determine if we need to start the loop
-   local loop_alive = uv.loop_alive()
+   local loop_mode = uv.loop_mode()
    local launcher = uv.new_idle()
    local launch_running = true
    launcher:start(function()
@@ -307,12 +307,12 @@ function Lume.run(lume)
       launch_running = false
    end)
 
-   if not loop_alive then
+   if not loop_mode then
       s:chat "running loop"
       uv.run 'default'
    end
 
-   loop_alive = uv.loop_alive()
+   local loop_alive = uv.loop_alive()
    -- if there are remaining (hence broken) coroutines, run the skein again,
    -- to try and catch the error:
    local retrier = uv.new_idle()
@@ -446,6 +446,8 @@ function Lume.persist(lume)
    lume.transacting, lume.persisting = true, true
    local check, report = 0, 1
 
+   local git_info = lume.git_info
+
    transactor:start(function()
       -- watch for next phase
       check = check + 1
@@ -465,7 +467,6 @@ function Lume.persist(lume)
       -- set up transaction
       local conn = lume.conn
       local stmts, ids, now = commitBundle(lume)
-      local git_info = lume:gitInfo()
       -- cache db info for later commits
       lume.db = { stmts    = stmts,
                   ids      = ids,
@@ -538,7 +539,6 @@ local date = sh.command("date", "-u", '+"%Y-%m-%d %H:%M:%S"')
 function Lume.now(lume)
    return tostring(date())
 end
-
 
 
 
@@ -826,6 +826,7 @@ local function new(dir, db_conn, no_write)
    lume.manifest = _makeManifest(lume)
    lume.project = dir.path[#dir.path]
    lume.git_info = git_info(tostring(dir))
+   uv.run 'once'
    lume.net = setmetatable({}, Net)
    lume.net.lume = lume
    _Lumes[dir] = lume
