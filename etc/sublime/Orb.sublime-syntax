@@ -120,11 +120,11 @@ contexts:
       escape_captures:
          1: comment.line.orb
 
-    # "Clojure" until we work it out for Clu
+    # Clu
 
     - match: '^#!+clu.*$'
       scope: comment.line.orb
-      embed:  "Packages/Clojure/Clojure.sublime-syntax"
+      embed:  "Packages/User/Clu.sublime-syntax"
       escape: ^(#/+clu.*)$
       escape_captures:
          1: comment.line.orb
