@@ -346,8 +346,12 @@ end
 
 
 
+
+
+local wrap = assert(coroutine.wrap)
+
 local function changer(lume)
-   return function (watcher, fname)
+   return wrap(function (watcher, fname)
       local full_name = tostring(lume.orb) .. "/" .. fname
       s:chat ("altered or new file %s", full_name)
       -- refresh git info
@@ -356,8 +360,9 @@ local function changer(lume)
       skein:transform()
       lume.has_file_change = true
       s:chat("processed %s", full_name)
-   end
+   end)
 end
+
 
 function Lume.serve(lume)
    s:chat("listening for file changes in orb/")

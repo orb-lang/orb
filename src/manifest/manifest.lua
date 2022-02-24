@@ -83,7 +83,6 @@ local Manifest = meta {}
 
 
 
-
 local function _addTable(manifest, tab)
    for k,v in pairs(tab) do
       s:verb("adding %s : %s", k, v)
