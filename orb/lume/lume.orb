@@ -450,7 +450,7 @@ end
 local commitBundle, commitSkein = assert(database.commitBundle),
                                   assert(database.commitSkein)
 
-local BAIL_AT = 2048
+local BAIL_AT = 1024
 
 function Lume.persist(lume)
    local transactor, persistor = uv.new_idle(), uv.new_idle()
@@ -467,7 +467,10 @@ function Lume.persist(lume)
          report = report * 2
       end
       if check > BAIL_AT then
-         s:warn("bailing. lume.count: %d", lume.count)
+         s:warn("many cycles, lume.count: %d, waiting for git: %s",
+                lume.count,
+                tostring(not (lume.git_info.complete == true)))
+         check = 0
          lume.count = 0
       end
       if lume:stillBundling() then return end
