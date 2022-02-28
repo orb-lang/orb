@@ -463,7 +463,7 @@ function Lume.persist(lume)
       -- watch for next phase
       check = check + 1
       if check == report then
-         s:verb("lume.count: %d", lume.count)
+         s:chat("lume.count: %d", lume.count)
          report = report * 2
       end
       if check > BAIL_AT then
