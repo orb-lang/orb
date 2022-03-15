@@ -48,7 +48,7 @@ contexts:
     - match: '(^|\s)==((?!==).)+=='
       scope: markup.quote.orb
 
-    - match: '(^|\s)=[^=]+='
+    - match: '(^|\s)=((?!=).)+='
       scope: markup.quote.orb
 
     - match: '(^|\s)/////((?!/////).)+/////'
