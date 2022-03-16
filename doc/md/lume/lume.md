@@ -326,7 +326,7 @@ function Lume.run(lume)
 
       for _, skein in pairs(lume.inflight) do
          s:verb("retry on %s", tostring(skein.source.file))
-         local ok, err = xpcall(skein:transform(), debug.traceback)
+         local ok, err = xpcall(skein.transform, debug.traceback, skein)
          if not ok then
             s:warn(err)
          end
@@ -788,7 +788,7 @@ local function _makeManifest(lume)
       if global_mani:exists() then
          s:verb "Found global manifest file"
          manifest(Skein(global_mani, lume))
-         manifest = manifest(true)
+         manifest = manifest:child()
       else
          s:verb "Didn't find global manifest"
       end

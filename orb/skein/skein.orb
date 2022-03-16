@@ -248,8 +248,8 @@ function Skein.tagAct(skein)
    local mani_blocks = skein.tags.manifest
    if mani_blocks then
       Manifest = require "orb:manifest/manifest"
-      s:verb("found manifest blocks in %s", tostring(skein.source.file))
-      skein.manifest = skein.manifest and skein.manifest(true) or Manifest()
+      s:chat("found manifest blocks in %s", tostring(skein.source.file))
+      skein.manifest = skein.manifest and skein.manifest:child() or Manifest()
       for _, block in ipairs(mani_blocks) do
          s:verb("attempted add of node type %s", block.id)
          skein.manifest(block)

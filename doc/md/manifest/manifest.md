@@ -142,16 +142,18 @@ local function _addSkein(manifest, skein)
 end
 ```
 
+```lua
+function Manifest.child(manifest)
+   return setmetatable({}, { __index = manifest,
+                             __call  = Manifest.__call })
+end
+```
+
 
 ```lua
 function Manifest.__call(manifest, msg)
    s:bore "entering manifest()"
-   if msg == true then
-      -- we make and return a new Manifest instance
-      return setmetatable({}, { __index = manifest,
-                                __call  = Manifest.__call })
-
-   end
+   assert(type(msg)  == 'table', "argument to manifest must be a table")
    -- otherwise this should be a codeblock or a Skein
    if msg.idEst and msg.idEst == Skein then
       s:bore("manifest was given a skein")
@@ -159,6 +161,8 @@ function Manifest.__call(manifest, msg)
    elseif msg.isNode and msg.id == 'codeblock' then
       s:bore("manifest was given a codeblock")
       _addBlock(manifest, msg)
+   else
+      error("unusable table passed to manifest")
    end
    s:bore "leaving manifest()"
 end

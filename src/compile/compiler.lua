@@ -36,6 +36,15 @@ s.verbose = false
 
 
 
+local bridge = require "bridge"
+
+
+
+
+
+
+
+
 
 
 
@@ -80,6 +89,13 @@ end
 
 
 
+
+
+
+
+
+
+
 function compilers.lua(skein)
    local project = skein.lume.project
    skein.compiled = skein.compiled or {}
@@ -100,6 +116,8 @@ function compilers.lua(skein)
    else
       s:chat "error:"
       s:chat(err)
+      -- exit (later) with error code
+      bridge.retcode = bridge.retcode + 1
       compiled.lua = { err = err }
    end
 end

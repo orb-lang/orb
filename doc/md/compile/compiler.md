@@ -31,6 +31,15 @@ s.verbose = false
 ```
 
 
+##### bridge for retcode
+
+We report compiler errors as non\-zero exit codes, which is carried on bridge:
+
+```lua
+local bridge = require "bridge"
+```
+
+
 #### \_moduleName\(path, project\)
 
 This takes a Path and a string for the project and derives a plausible module
@@ -75,6 +84,13 @@ end
 ```
 
 
+## language\-specific compilers
+
+We'll need a general interface for this soon\.  For now, the Lua compiler
+patches the retcode directly, but we'll want reporting success or error to
+happen along the interface\.
+
+
 ### compilers\.lua\(skein\)
 
 I'm not convinced this is the right function signature, but, adelante\.
@@ -100,6 +116,8 @@ function compilers.lua(skein)
    else
       s:chat "error:"
       s:chat(err)
+      -- exit (later) with error code
+      bridge.retcode = bridge.retcode + 1
       compiled.lua = { err = err }
    end
 end
