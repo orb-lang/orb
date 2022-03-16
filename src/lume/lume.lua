@@ -450,7 +450,7 @@ end
 local commitBundle, commitSkein = assert(database.commitBundle),
                                   assert(database.commitSkein)
 
-local BAIL_AT = 1024
+local BAIL_AT = 2048
 
 function Lume.persist(lume)
    local transactor, persistor = uv.new_idle(), uv.new_idle()
@@ -463,7 +463,7 @@ function Lume.persist(lume)
       -- watch for next phase
       check = check + 1
       if check == report then
-         s:chat("lume.count: %d", lume.count)
+         s:verb("lume.count: %d", lume.count)
          report = report * 2
       end
       if check > BAIL_AT then
