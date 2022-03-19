@@ -1,0 +1,233 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: Clu
+file_extensions: [clu]
+scope: source.clu
+variables:
+  ws:           '(?:\s|(,))*'
+  wsb:          '(?<=^|[\s,()\[\]{}~''`"^@]|#_)'
+  wse:           '(?=$|[\s,()\[\]{}";])'
+  nwse:              '[^\s,()\[\]{}";]'
+  sym_head:     '[\p{Alpha}*!_?$%&=<>]'
+  sym_head_lax: '[\p{Alpha}*!_?$%&=<>''\-+.#:]'
+  sym_body:     '[\p{Alpha}*!_?$%&=<>''\-+.#:0-9]'
+  ns_symbol:    '(?:[\-+.]|[\-+.]{{sym_head_lax}}{{sym_body}}*|{{sym_head}}{{sym_body}}*)'
+  symbol:       '(?:/|{{ns_symbol}})'
+  kw_head:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9]'
+  kw_body:      '[\p{Alpha}*!_?$%&=<>''\-+.#0-9:]'
+  keyword:      '{{kw_head}}{{kw_body}}*'
+  regexp_name:  '[a-zA-Z][a-zA-Z0-9]*'
+contexts:
+  main:
+    - include: forms
+    - include: stray-brackets
+
+  forms:
+    - include: var_quote
+    - include: deref
+    - include: reader_conditionals
+    - include: syntax_quote
+    - include: quote
+    - include: defs
+    - include: anonymous_fn
+    - include: string
+    - include: character
+    - include: comment
+    - include: keyword
+    - include: constant
+    - include: symbol
+    - include: integer
+    - include: float
+    - include: ratio
+    - include: tag
+    - include: list
+    - include: vector
+    - include: map
+    - match: ','
+      scope: punctuation.definition.comma.clu
+
+  var_quote:
+    - match: '(#''){{ws}}'
+      captures:
+        1: keyword.operator.var.clu
+        2: punctuation.definition.comma.clu
+
+  deref:
+    - match: '(@){{ws}}'
+      captures:
+        1: keyword.operator.deref.clu
+        2: punctuation.definition.comma.clu
+
+  quote:
+    - match: '(''){{ws}}'
+      captures:
+        1: keyword.operator.quote.clu
+        2: punctuation.definition.comma.clu
+      push:
+        - include: forms
+        - match: ''
+          pop: true
+
+  syntax_quote:
+    - match: '(~@?){{ws}}'
+      captures:
+        1: keyword.operator.unquote.clu
+        2: punctuation.definition.comma.clu
+      push:
+        - meta_scope: meta.unquoted.clu
+        - include: forms
+        - match: ''
+          pop: true
+    - match: '(`){{ws}}'
+      captures:
+        1: keyword.operator.quote.syntax.clu
+        2: punctuation.definition.comma.clu
+      push:
+        - meta_scope: meta.quoted.syntax.clu
+        - include: forms
+        - match: ''
+          pop: trues
+
+  defs:
+    - match: '(\()(def{{symbol}}*|{{ns_symbol}}(/)def{{symbol}}*|ns)(?=\s|\))'
+      captures:
+        1: punctuation.section.parens.begin.clu
+        2: source.symbol.clu
+        3: punctuation.definition.symbol.namespace.clu
+      push:
+        - meta_scope: meta.parens meta.definition.clu
+        - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+          scope: source.symbol.clu entity.name.clu
+          captures:
+            1: punctuation.definition.symbol.namespace.clu
+          set:
+            - meta_content_scope: meta.parens meta.definition.clu
+            - include: forms
+            - match: '\)'
+              scope: meta.parens meta.definition.clu punctuation.section.parens.end.clu
+              pop: true
+            - include: stray-brackets
+        - match: '\)'
+          scope: punctuation.section.parens.begin.clu
+          pop: true
+        - include: forms
+        - include: stray-brackets
+
+  anonymous_fn:
+    - match: '#\('
+      scope: punctuation.section.parens.begin.clu
+      push:
+      - meta_scope: meta.parens.clu meta.function.clu
+      - match: \)
+        scope: punctuation.section.parens.end.clu
+        pop:   true
+      - include: main
+
+  constant:
+    - match: '{{wsb}}(nil|true|false){{wse}}'
+      scope: constant.language.clu
+
+  string:
+    - match: '{{wsb}}"'
+      scope: punctuation.definition.string.begin.clu
+      push:
+      - meta_scope: string.quoted.double.clu
+      - match: '(\\)(u\h{4}|b|t|n|f|r|"|''|\\|[0-3]?[0-7]{1,2})|((\\).)'
+        scope: constant.character.escape.clu
+        captures:
+          1: punctuation.definition.character.escape.begin.clu
+          3: invalid.illegal.escape.string.clu
+          4: punctuation.definition.character.escape.begin.clu
+      - match: '"'
+        scope: punctuation.definition.string.end.clu
+        pop: true
+
+  comment: # TODO Clojure (comment)
+    - match: '(;+).*$'
+      scope: comment.line.semicolon.clu
+      captures:
+        1: punctuation.definition.comment.clu
+    - match: '#_'
+      scope: comment.block.clu punctuation.definition.comment.clu
+
+  symbol:
+    - match: '{{wsb}}(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+      scope: source.symbol.clu
+      captures:
+        1: punctuation.definition.symbol.namespace.clu
+
+  keyword:
+    - match: '{{wsb}}(::?){{keyword}}(?:(/){{keyword}})?{{wse}}'
+      scope: constant.other.keyword.clu
+      captures:
+        1: punctuation.definition.constant.begin.clu
+        2: punctuation.definition.constant.namespace.clu
+
+  integer:
+    - match: '{{wsb}}[+-]?(?:0|[1-9][0-9]*)(N)?{{wse}}'
+      scope: constant.numeric.integer.clu
+      captures:
+        1: punctuation.definition.integer.precision.clu
+
+  float:
+    - match: '{{wsb}}[+-]?(?:0|[1-9][0-9]*)(?:(M)|\.[0-9]*(M)?|[eE][+-]?[0-9]+(M)?|\.[0-9]*[eE][+-]?[0-9]+(M)?){{wse}}'
+      scope: constant.numeric.float.clu
+      captures:
+        1: punctuation.definition.float.precision.clu
+        2: punctuation.definition.float.precision.clu
+        3: punctuation.definition.float.precision.clu
+        4: punctuation.definition.float.precision.clu
+    - match: '{{wsb}}(##Inf|##-Inf|##NaN){{wse}}'
+      scope: constant.numeric.float.clu
+
+  ratio:
+    - match: '{{wsb}}[+-]?(0|[1-9][0-9]*)/[1-9][0-9]*{{wse}}'
+      scope: constant.numeric.ratio.clu
+
+  tag:
+    - match: '{{wsb}}(#inst\s*"\d\d\d\d(?:-[01]\d(?:-[0123]\d(?:T[012]\d(?::[012345]\d(?::[0123456]\d(?:[.]\d{1,9})?)?)?)?)?)?(?:Z|[-+][012]\d:[012345]\d)?"|(#inst\s*"[^"]*")){{wse}}'
+      scope: constant.other.instant.clu
+      captures:
+        2: invalid.illegal.instant.clu
+    - match: '{{wsb}}(#uuid\s*"\h{8}-\h{4}-\h{4}-\h{4}-\h{12}"|(#uuid\s*"[^"]*")){{wse}}'
+      scope: constant.other.uuid.clu
+      captures:
+        2: invalid.illegal.uuid.clu
+    - match: '{{wsb}}#(?![_#{])(?:{{symbol}}|{{ns_symbol}}(/){{symbol}}){{wse}}'
+      scope: storage.type.tag.clu
+
+  list:
+    - match: '\('
+      scope: punctuation.section.parens.begin.clu
+      push:
+      - meta_scope: meta.parens.clu
+      - match: \)
+        scope: punctuation.section.parens.end.clu
+        pop:   true
+      - include: main
+
+  vector:
+    - match: \[
+      scope: punctuation.section.brackets.begin.clu
+      push:
+      - meta_scope: meta.brackets.clu
+      - match: \]
+        scope: punctuation.section.brackets.end.clu
+        pop:   true
+      - include: main
+
+  map:
+    - match: '\{'
+      scope: punctuation.section.braces.begin.clu
+      push:
+      - meta_scope: meta.braces.clu
+      - match: \}
+        scope: punctuation.section.braces.end.clu
+        pop:   true
+      - include: main
+
+
+  stray-brackets:
+    - match: '[\]\)\}]'
+      scope: invalid.illegal.stray-bracket-end

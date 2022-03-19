@@ -149,7 +149,7 @@ end
 
 
 
-function Manifest.__call(manifest, msg)
+local function _call(manifest, msg)
    s:bore "entering manifest()"
    assert(type(msg)  == 'table', "argument to manifest must be a table")
    -- otherwise this should be a codeblock or a Skein
@@ -165,6 +165,8 @@ function Manifest.__call(manifest, msg)
    s:bore "leaving manifest()"
 end
 
+Manifest.__call = _call
+
 
 
 
@@ -172,7 +174,7 @@ end
 local function new(block)
    local manifest = meta(Manifest)
    if block then
-      _addBlock(manifest, block)
+      _call(manifest, block)
    end
    return manifest
 end
