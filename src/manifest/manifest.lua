@@ -142,7 +142,7 @@ end
 
 
 function Manifest.child(manifest)
-   return setmetatable({}, { __index = manifest,
+   return setmetatable({}, { __index = getmetatable(manifest),
                              __call  = Manifest.__call })
 end
 

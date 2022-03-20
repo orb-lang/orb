@@ -132,19 +132,30 @@ Skein.__index = Skein
 #/lua
 
 
-** Methods
+** Skein Stage Methods
 
   Skeins are in the chaining style: all methods return the skein at the
 bottom. If additional return values become necessary, they may be supplied
 after.
 
-Generally, the state created and manipulated by method calls is attached to
-the skein itself.
+The methods in this section are the basic stages of the Orb tailoring process,
+and are presented in order.  Calling any later stage method should
+automatically trigger all missing stages, failure to do so is a bug.
 
-The order in which these steps are performed is crucial, and there's no
-guarantee they will only hapen once.  So a Skein will do its best to perform
-any prior steps which either haven't happened, or need to happen again, when
-a given operation is requested.
+This offers a chance to optimize with caching (although we don't yet), and
+makes using Skeins in the helm repl less tedious.
+
+The stage methods should be idempotent if the Skein doesn't have reason to
+perform them a second time, but they aren't.
+
+The state created and manipulated by method calls is attached to the skein
+itself, all stage methods return only the Skein, and either handle errors
+internally or throw them.
+
+
+**** Next Steps With Stage Methods
+
+  We don't use parameters in most stage methods at all, and
 
 
 *** Skein:load()
@@ -338,7 +349,7 @@ end
 #/lua
 
 
-**** Skein:compile()
+*** Skein:compile()
 
 Takes a knitted Skein and compiles the Scroll if it knows how.
 
@@ -351,10 +362,30 @@ for Lua artifacts, so we'll start there.
 
 #!lua
 function Skein.compile(skein)
+   if not skein.knitted then skein:knit() end
+
    compiler:compile(skein)
    return skein
 end
 #/lua
+
+
+** Output Methods
+
+These put various skein contents into databases or the file system.
+
+This was an expedient way to code the logic, but I don't like that we hand in
+a control surface for the database and have the Skein work on itself, I would
+prefer a method which provides a commit-ready table which the Lume could take
+action on.
+
+Similarly, and worse, Skeins are carrying around a whole Lume so they can
+write themselves to the file system.  Skeins should know where things are
+/supposed/ to go, and should provide the strings and expected locations for
+the files with a method.
+
+The more I think about it, the less I like Skeins writing to the file system.
+I'm not even sure they should be /reading/ from it, but one step at a time.
 
 
 *** Skein:commit(stmts)
@@ -366,6 +397,7 @@ statements sufficient to complete the operation.
 local commitSkein = assert(database.commitSkein)
 
 function Skein.commit(skein, stmts, ids, git_info, now)
+   if not skein.compiled then skein:compile() end
    assert(stmts)
    assert(ids)
    assert(git_info)

@@ -155,6 +155,17 @@ Skein.__index = Skein
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 function Skein.load(skein)
    local file = assert(skein.source.file, "no file on skein")
    local ok, text = pcall(file.read, file)
@@ -351,6 +362,8 @@ end
 
 
 function Skein.compile(skein)
+   if not skein.knitted then skein:knit() end
+
    compiler:compile(skein)
    return skein
 end
@@ -363,9 +376,28 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local commitSkein = assert(database.commitSkein)
 
 function Skein.commit(skein, stmts, ids, git_info, now)
+   if not skein.compiled then skein:compile() end
    assert(stmts)
    assert(ids)
    assert(git_info)
