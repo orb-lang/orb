@@ -400,7 +400,7 @@ local function _loader(skein, lume, path)
    lume.count = lume.count - 1
    lume.inflight[co] = nil
    lume.rack:insert(co)
-   local stmts, ids, git_info, now = yield()
+   local stmts, ids, git_info, now = yield(skein)
    skein:commit(stmts, ids, git_info, now)
    yield()
    skein:persist()
