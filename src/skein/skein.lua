@@ -382,6 +382,26 @@ end
 
 
 
+function Skein.tailor(skein)
+   if not skein.compiled then skein:compile() end
+
+   return skein
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

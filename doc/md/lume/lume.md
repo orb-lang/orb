@@ -397,8 +397,15 @@ local function _loader(skein, lume, path)
    s:verb("begin read of %s", path)
    local co = running()
    lume.inflight[co] = skein
+   -- one stage per line for nice stack traces
    skein :load() -- yields
-      :spin() :tag() :tagAct()  :knit() :weave() :compile()
+         :spin()
+         :tag()
+         :tagAct()
+         :knit()
+         :weave()
+         :compile()
+         :tailor() -- this is in fact the only necessary method.
    s:verb("processed: %s", path)
    lume.count = lume.count - 1
    lume.inflight[co] = nil

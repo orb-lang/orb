@@ -377,6 +377,26 @@ end
 ```
 
 
+### Skein:tailor\(\)
+
+Do every operation on the Skein of which the skein is capable\.
+
+This is currently a no\-op if `:compile` has been called, but probably won't
+stay that way\.  The API guarantee is that all the stage methods will be
+called if `:tailor` is sent, no matter what particular order and
+intermediates might exist\.
+
+We unroll the methods in the Lume, currently, but this is mostly didactic\.
+
+```lua
+function Skein.tailor(skein)
+   if not skein.compiled then skein:compile() end
+
+   return skein
+end
+```
+
+
 ## Output Methods
 
 These put various skein contents into databases or the file system\.
