@@ -316,7 +316,7 @@ function Lume.run(lume)
    -- to try and catch the error:
    local retrier = uv.new_idle()
    retrier :start(function()
-      if launch_running or lume.transacting or lume.persisting then
+      if launch_running or lume.persisting then
          return
       end
 
@@ -434,15 +434,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
 function Lume.stillBundling(lume)
    return (lume.count > 0) or (not lume.git_info.complete)
 end
@@ -452,16 +443,16 @@ end
 local commitBundle, commitSkein = assert(database.commitBundle),
                                   assert(database.commitSkein)
 
-local BAIL_AT = 2048
+local BAIL_AT = 4096
 
 function Lume.persist(lume)
-   local transactor, persistor = uv.new_idle(), uv.new_idle()
-   lume.transacting, lume.persisting = true, true
+   local persistor = uv.new_idle()
+   lume.persisting = true
    local check, report = 0, 1
 
    local git_info = lume.git_info
 
-   transactor:start(function()
+   persistor :start(function()
       -- watch for next phase
       check = check + 1
       if check == report then
@@ -479,6 +470,10 @@ function Lume.persist(lume)
       end
       if lume:stillBundling() then return end
       s:chat("done bundling, setting up transaction")
+      -- stop the idle, we block to completion
+      persistor:stop()
+      lume.persisting = false
+
       -- report failed coroutines
       for _, skein in pairs(lume.inflight) do
          s:verb("failed to process: %s", tostring(skein.source.file))
@@ -509,18 +504,11 @@ function Lume.persist(lume)
       -- clean up db cache
       lume.db.ids.bundle_id = nil
       lume.db.now = nil
-      -- end transactor, signal persistor to act
-      lume.transacting = false
-      transactor:stop()
-   end)
-   -- persist changed files to disk
-   persistor:start(function()
-      if lume.transacting then return end
+      s:verb "transaction complete"
+      -- and persist to disk
       for skein in lume.tailored:popAll() do
          skein:persist()
       end
-      lume.persisting = false
-      persistor:stop()
    end)
 
    return lume
@@ -810,7 +798,6 @@ local function new(dir, db_conn, no_write)
    lume.well_formed = _findSubdirs(lume, dir)
    if lume.well_formed then
       case(lume, lume.orb)
-
 
 
 
