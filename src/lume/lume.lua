@@ -295,13 +295,6 @@ end
 
 
 
-
-
-
-
-
-
-
 function Lume.run(lume)
    -- determine if we need to start the loop
    local loop_mode = uv.loop_mode()
@@ -390,7 +383,6 @@ end
 
 
 
-
 local create, resume, running, yield = assert(coroutine.create),
                                        assert(coroutine.resume),
                                        assert(coroutine.running),
@@ -412,11 +404,8 @@ local function _loader(skein, lume, path)
    s:verb("processed: %s", path)
    lume.count = lume.count - 1
    lume.inflight[co] = nil
-   lume.rack:insert(co)
-   local stmts, ids, git_info, now = yield(skein)
-   skein:commit(stmts, ids, git_info, now)
-   yield()
-   skein:persist()
+   lume.tailored:push(skein)
+   return yield()
 end
 
 function Lume.bundle(lume)
@@ -495,6 +484,7 @@ function Lume.persist(lume)
          s:verb("failed to process: %s", tostring(skein.source.file))
       end
       -- set up transaction
+      -- this blocks now, and it should it's a transaction.
       local conn = lume.conn
       local stmts, ids, now = commitBundle(lume)
       -- cache db info for later commits
@@ -507,18 +497,8 @@ function Lume.persist(lume)
       lume.db.commit = function() conn:exec [[COMMIT;]] end
       s:chat("writing artifacts to database")
       lume.db.begin()
-      for co in pairs(lume.rack) do
-         if coroutine.status(co) ~= 'dead' then
-            local ok, err = resume(co, stmts, ids, git_info, now)
-            if not ok then
-               error ("coroutine broke during commit: " .. err
-                        .. "\n" .. debug.traceback(co))
-               conn:exec "ROLLBACK;"
-               transacting = false
-               persistor:stop()
-               transactor:stop()
-            end
-         end
+      for skein in lume.tailored:peekAll() do
+         skein:commit(stmts, ids, git_info, now)
       end
       -- commit transaction
       lume.db.commit()
@@ -536,16 +516,9 @@ function Lume.persist(lume)
    -- persist changed files to disk
    persistor:start(function()
       if lume.transacting then return end
-      for co in pairs(lume.rack) do
-         local ok, err = resume(co)
-         if not ok then
-            error ("coroutine broke during file write: " .. err
-                     .. "\n" .. debug.traceback(co))
-            persistor:stop()
-         end
+      for skein in lume.tailored:popAll() do
+         skein:persist()
       end
-      -- GC the coroutines, now that we're done with them
-      lume.rack:clear()
       lume.persisting = false
       persistor:stop()
    end)
@@ -833,7 +806,6 @@ local function new(dir, db_conn, no_write)
    lume.no_write = no_write
    lume.shuttle = Deque()
    lume.tailored = Deque()
-   lume.rack = Set()
    lume.pedantic = _Bridge.args.pedantic and true or false
    lume.well_formed = _findSubdirs(lume, dir)
    if lume.well_formed then
