@@ -207,7 +207,13 @@ end
 #### Lume\.shuttle
 
 A [deque](no manifest domain for brdeque/MISSING_POST_PROJECTdoc/md/deque.md) on which files are placed, to be turned into
-Skeins by the net and wrapped in a coroutine for asynchronous processing\.
+Skeins by the Net and wrapped in a coroutine for asynchronous processing\.
+
+
+#### Lume\.tailored
+
+Another deque, where Skeins are put when they're ready to have any changes
+persisted\.
 
 
 #### Lume\.inflight
@@ -829,6 +835,7 @@ local function new(dir, db_conn, no_write)
                        or error "no database"
    lume.no_write = no_write
    lume.shuttle = Deque()
+   lume.tailored = Deque()
    lume.rack = Set()
    lume.pedantic = _Bridge.args.pedantic and true or false
    lume.well_formed = _findSubdirs(lume, dir)

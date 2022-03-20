@@ -296,6 +296,12 @@ end
 
 
 
+
+
+
+
+
+
 function Lume.run(lume)
    -- determine if we need to start the loop
    local loop_mode = uv.loop_mode()
@@ -826,6 +832,7 @@ local function new(dir, db_conn, no_write)
                        or error "no database"
    lume.no_write = no_write
    lume.shuttle = Deque()
+   lume.tailored = Deque()
    lume.rack = Set()
    lume.pedantic = _Bridge.args.pedantic and true or false
    lume.well_formed = _findSubdirs(lume, dir)
