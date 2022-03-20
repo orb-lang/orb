@@ -290,6 +290,61 @@ end
 #/lua
 
 
+*** database.writetArtifacts(stmts, stuff, git_info, ids)
+
+This at least stops borrowing the entire Skein to just write some bytecode.
+
+It's the appropriate interface, almost, kinda.
+
+It's terrible actually but we'll add a modules Arcivist later.  First SQLite
+database and the foundation of bootstrapping bridge, both as a project and
+as an application.
+
+#!lua
+function database.writeArtifacts(stmts, stuff, git_info, now, ids)
+   local bytecode = stuff.bytecode
+   if not bytecode or bytecode.err then
+      local err = bytecode and bytecode.err
+      if err then
+        s:complain("attempt to commit erroneous bytecode data: %s, %s",
+               tostring(skein.source.file), err)
+        return nil, err
+      end
+      -- missing bytecode means the Doc didn't create a knitted.lua, which
+      -- is normal
+      return nil
+   end
+   -- we probably should unwrap these into parameters
+   local project_id, version_id, bundle_id = ids.project_id,
+                                             ids.version_id,
+                                             ids.bundle_id
+   -- get code_id from the hash
+   local code_id = stmts.code_id :bindkv(bytecode) :value()
+   if not code_id then
+      bytecode.binary = blob(bytecode.binary)
+      stmts.new_code :bindkv(bytecode) :value()
+      code_id = stmts.code_id :bindkv(bytecode) :value()
+   end
+   s:verb("code ID is " .. code_id)
+   s:verb("module name is " .. bytecode.name)
+   if not code_id then
+      error("code_id not found for " .. bytecode.name)
+   end
+   local mod = { name    = bytecode.name,
+                 project = project_id,
+                 bundle  = bundle_id,
+                 code    = code_id,
+                 version = version_id,
+                 time    = now }
+   if git_info.is_repo then
+      mod.vc_hash = git_info.commit_hash
+      mod.branch  = git_info.branch
+   end
+   stmts.add_module:bindkv(mod) :value()
+end
+#/lua
+
+
 *** database.commitBundle(lume)
 
 Commits all project-level information, and prepares ids and statements for

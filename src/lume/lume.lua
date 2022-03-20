@@ -442,6 +442,7 @@ end
 
 local commitBundle, commitSkein = assert(database.commitBundle),
                                   assert(database.commitSkein)
+local writeArtifacts = assert(database.writeArtifacts)
 
 local BAIL_AT = 4096
 
@@ -493,7 +494,8 @@ function Lume.persist(lume)
       s:chat("writing artifacts to database")
       lume.db.begin()
       for skein in lume.tailored:peekAll() do
-         skein:commit(stmts, ids, git_info, now)
+         local stuff = assert(skein:forModuleDatabase())
+         writeArtifacts(stmts, stuff, git_info, now, ids)
       end
       -- commit transaction
       lume.db.commit()
