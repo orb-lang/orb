@@ -48,5 +48,6 @@
 
 return {  lua = require "orb:knit/lua",
             c = require "orb:knit/c",
-         scad = require "orb:knit/scad" }
+         scad = require "orb:knit/scad",
+         plantuml = require "orb:knit/plantuml" }
 

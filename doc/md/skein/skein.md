@@ -442,7 +442,8 @@ Produces a table intended for committing to the module database\.
 ```lua
 function Skein.forModuleDatabase(skein)
    local artifacts = skein.compiled and skein.compiled.lua
-   return { bytecode = artifacts }
+   return { bytecode = artifacts,
+            name = tostring(skein.source.file) }
 end
 ```
 
