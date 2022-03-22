@@ -118,8 +118,13 @@ local Doc_str = [[
                     ((structure "\n"* / (!drawer-bottom prose-line)+)+
                     / &drawer-bottom)
                     drawer-bottom
-   `drawer-top`  ←  " "* ":[" (!"\n" !"]:" 1)*@drawer_c "]:" &"\n"
-`drawer-bottom`  ←  " "* ":/[" (!"\n" !"]:" 1)*@(drawer_c) "]:" line-end
+                    ;; :[contents]:, ::[contents]::
+   `drawer-top`  ←  " "* (":")+@drawer_l "["
+                    (!"\n" !"]:" 1)*
+                    "]" (":")+@(drawer_l) &"\n"
+`drawer-bottom`  ←  " "* (":")+@(drawer_l) "["
+                    (!"\n" !"]:" 1)*@(drawer_c)
+                    "]" (":")+@(drawer_l) line-end
 
       paragraph  ←  (!header !structure par-line (!"\n\n" "\n")?)+
      `par-line`  ←  (!"\n" 1)+

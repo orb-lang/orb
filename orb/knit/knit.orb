@@ -4,6 +4,10 @@
   Knitting is the action by which source files are converted into 'source
 code', which we call sorcery to distinguish it from the actual source.
 
+This operation is referred to by Knuth as "tangling", an irresistable pun off
+one of Shakespeare's best lines.  This is not the place to unpack that choice,
+but rather a reference for the perplexed.
+
 This module needs to keep in tension two goals: to provide the critical
 functions needed to keep compiling Orb source code, while being expandable
 into a true literate programming system.
@@ -74,9 +78,9 @@ CREATE dog (dog_id INTEGER, name TEXT, age NUMBER);
 
 #/orb
 
-And parse that into a local variable long-string.  We can be smart enough
-about it to turn =@Insert.dog= into an assignment to an existing =Insert=
-table, by dropping the otherwise mandatory =local=.
+And parse that into a local variable long-string.  We're smart enough about it
+to turn =@Insert.dog= into an assignment to an existing =Insert= table, by
+dropping the otherwise mandatory =local=.
 
 This isn't a substitute for transclusion, but a complement to it. SQL is SQL,
 and we want to be able to maintain a single literate document describing data
