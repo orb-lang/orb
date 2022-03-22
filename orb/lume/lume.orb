@@ -443,6 +443,7 @@ end
 local commitBundle, commitSkein = assert(database.commitBundle),
                                   assert(database.commitSkein)
 local writeArtifacts = assert(database.writeArtifacts)
+local status = coroutine.status
 
 local BAIL_AT = 4096
 
@@ -467,7 +468,12 @@ function Lume.persist(lume)
                 lume.count,
                 tostring(not (lume.git_info.complete == true)))
          check = 0
-         lume.count = 0
+         for co in pairs(lume.inflight) do
+            if status(co) == 'dead' then
+               lume.inflight[co] = nil
+               lume.count = lume.count - 1
+            end
+         end
       end
       if lume:stillBundling() then return end
       s:chat("done bundling, setting up transaction")
