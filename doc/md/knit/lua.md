@@ -13,7 +13,7 @@ local s = require "status:status" ()
 ```
 
 ```lua
-local lua_knit = {}
+local lua_knit = {OLD = true}
 ```
 
 

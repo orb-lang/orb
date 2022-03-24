@@ -12,7 +12,7 @@ s.chatty = true
 
 
 ```lua
-local plantUML = {code_type = 'plantuml'}
+local plantUML = {code_type = 'plantuml', OLD = true}
 ```
 
 Just for now, we're going to just knit it\.

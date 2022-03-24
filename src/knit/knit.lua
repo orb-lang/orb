@@ -100,7 +100,15 @@
 local Scroll = require "scroll:scroll"
 local Set = require "set:set"
 
+
+
+
+
 local knitters = require "orb:knit/knitters"
+
+-- we need this as long as we have to support both forms, and perhaps not
+-- after
+local Knitter = require "orb:knit/knitter"
 
 local core = require "core:core"
 
@@ -123,7 +131,15 @@ function Knit.knit(knitter, skein)
       skein.knitted = knitted
    end
    -- specialize the knitter collection and create scrolls for each type
+   -- we stop doing this with Knitters.
    local knit_set = Set()
+   local new_knitters = {}
+   -- no new-type knitters exist yet, but they will.
+   for code_type, knitter in pairs(knitters) do
+      if not knitter.OLD then
+         new_knitters[code_type] = knitter
+      end
+   end
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'()
       knit_set:insert(knitters[code_type and code_type:span()])

@@ -17,7 +17,7 @@ local s = require "status:status" ()
 
 
 
-local scad_knit = {}
+local scad_knit = {OLD = true}
 
 
 

@@ -12,7 +12,7 @@ s.chatty = true
 
 
 
-local plantUML = {code_type = 'plantuml'}
+local plantUML = {code_type = 'plantuml', OLD = true}
 
 
 
