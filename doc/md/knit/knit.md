@@ -60,7 +60,7 @@ attached to the skein during the spin phase\.
 
 This is going to get quite a bit more complex, but not right away\.
 
-For now, we'll have a Knitter, which is a collection of language\-specific
+For now, we'll have a Knit, which is a collection of language\-specific
 knitters\.  The minimum is completely standard and simply takes the contents of
 appropriate codeblocks and inserts enough newlines that the lines line up\.
 
@@ -106,14 +106,14 @@ local core = require "core:core"
 ```
 
 ```lua
-local Knitter = {}
-Knitter.__index = Knitter
+local Knit = {}
+Knit.__index = Knit
 ```
 
 ```lua
 local insert = assert(table.insert)
 
-function Knitter.knit(knitter, skein)
+function Knit.knit(knitter, skein)
    local doc = skein.source.doc
    local knitted
    if skein.knitted then
@@ -163,12 +163,12 @@ end
 
 ```lua
 local function new()
-   local knitter = setmetatable({}, Knitter)
+   local knitter = setmetatable({}, Knit)
 
    return knitter
 end
 
-Knitter.idEst = new
+Knit.idEst = new
 ```
 
 ```lua

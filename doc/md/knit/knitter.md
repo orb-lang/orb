@@ -21,13 +21,34 @@ local new, Knitter, Knit_M = cluster.genus()
 
 ## fields
 
+Knitters must be scalable, and pluggable, so we don't try them unless one of
+two conditions is met\.
+
+The first is if we see the `code_type`:
+
 
 ### code\_type: string
 
   A Knitter must have a `code_type`, which is a string\.
 
+These are currently always lowercase, and are treated as case sensitive\.
+
+This corresponds exactly to the `code-type` rule in the Grammar\.
+
 ```lua
 Knitter.code_type = nil
+```
+
+
+### tags: \{string\}
+
+These are the tags a given knitter might take action on\.
+
+We will probably accept e\.g\. `'#noKnit'` and `'noKnit'` as equivalent, but we
+don't, and I'm using the full hashtag form\.
+
+```lua
+Knitter.tags = {}
 ```
 
 This might be a good genus to apply a cluster `mold` once I get around to
@@ -40,8 +61,11 @@ packages\.
 
 ## builder
 
+
+
 ```lua
 cluster.construct(new, function(_new, knitter, code_type)
+   assert(type(code_type) == 'string', "#1 must be a string")
    knitter.code_type = code_type
    return knitter
 end)
@@ -53,10 +77,13 @@ end)
 This is streamlined down to a predicate to decide if we're going to knit a
 codeblock, and a knitter\.
 
-We'll need to be smarter than this, since it doesn't scale, but we'll get that
-flexibility back when we have knitters specialized from a common genus\.
+The method `:examine` is called on any codeblock which either matches the
+code type, or is tagged with one of the tags\.  We use a boolean flag as a
+second value, so that `:examine` needn't re\-derive which reason it has been
+called: if `from_tag` is set, then the Knitter was invoked because of a tag\.
 
-### Knitter:examine\(skein, codeblock\)
+
+### Knitter:examine\(skein, codeblock, from\_tag\) \-> boolean
 
 A predicate, returning `true` if the codeblock is to be knit\.
 

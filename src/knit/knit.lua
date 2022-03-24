@@ -106,14 +106,14 @@ local core = require "core:core"
 
 
 
-local Knitter = {}
-Knitter.__index = Knitter
+local Knit = {}
+Knit.__index = Knit
 
 
 
 local insert = assert(table.insert)
 
-function Knitter.knit(knitter, skein)
+function Knit.knit(knitter, skein)
    local doc = skein.source.doc
    local knitted
    if skein.knitted then
@@ -163,12 +163,12 @@ end
 
 
 local function new()
-   local knitter = setmetatable({}, Knitter)
+   local knitter = setmetatable({}, Knit)
 
    return knitter
 end
 
-Knitter.idEst = new
+Knit.idEst = new
 
 
 

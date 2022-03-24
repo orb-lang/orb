@@ -307,7 +307,7 @@ function database.writeArtifacts(stmts, stuff, git_info, now, ids)
       local err = bytecode and bytecode.err
       if err then
         s:complain("attempt to commit erroneous bytecode data: %s, %s",
-               tostring(skein.source.file), err)
+               tostring(stuff.name), err)
         return nil, err
       end
       -- missing bytecode means the Doc didn't create a knitted.lua, which
