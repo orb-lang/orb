@@ -119,6 +119,31 @@ Knit.__index = Knit
 
 
 
+
+
+
+
+
+
+
+local function _haveScroll(skein, code_type)
+   -- idempotent decorator
+   if skein.knitted[code_type] then return end
+
+   local knitted = skein.knitted
+   local scroll = Scroll()
+   knitted[code_type] = scroll
+   -- #todo this bakes in assumptions we wish to relax
+   scroll.line_count = 1
+   scroll.path = skein.source.file.path
+                    :subFor(skein.source_base,
+                            skein.knit_base,
+                            code_type)
+end
+
+
+
+
 local insert = assert(table.insert)
 
 function Knit.knit(knitter, skein)
@@ -145,14 +170,7 @@ function Knit.knit(knitter, skein)
       knit_set:insert(knitters[code_type and code_type:span()])
    end
    for knitter, _ in pairs(knit_set) do
-      local scroll = Scroll()
-      knitted[knitter.code_type] = scroll
-      -- #todo this bakes in assumptions we wish to relax
-      scroll.line_count = 1
-      scroll.path = skein.source.file.path
-                       :subFor(skein.source_base,
-                               skein.knit_base,
-                               knitter.code_type)
+      _haveScroll(skein, knitter.code_type)
    end
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'() :span()
