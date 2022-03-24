@@ -21,35 +21,23 @@ local scad_knit = {OLD = true}
 
 
 
-
-
-
-scad_knit.code_type = "scad"
-
+local Scad_knit = require "orb:knit/knitter" "scad"
 
 
 
 
 
 
-
-
-local scad_noknit = require "orb:knit/predicator" "#asLua"
-
-
-
-scad_knit.pred = function() return false end
-
-scad_knit.knit_pred = function() return end
+function Scad_knit.examine(scad_knit, skein, codeblock, from_tag)
+   return true
+end
 
 
 
 
 
 
-
-function scad_knit.knit(codeblock, scroll, skein)
-   if scad_noknit(codeblock, skein) then return end
+function Scad_knit.knit(scad_knit, skein, codeblock, scroll)
    local codebody = codeblock :select "code_body" ()
    local line_start, _ , line_end, _ = codebody:linePos()
    for i = scroll.line_count, line_start - 1 do
@@ -63,5 +51,5 @@ end
 
 
 
-return scad_knit
+return Scad_knit
 
