@@ -157,9 +157,20 @@ function Knit.knit(knitter, skein)
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'() :span()
       local tagset = skein.tags[codeblock]
+
+      -- this takes over
+      for _type, knitter in pairs(new_knitters) do
+         if _type == code_type then -- ignore tags, this is temporary
+            if knitter:examine(codeblock) then
+               knitter:knit(skein, codeblock, scroll)
+            end
+         end
+      end
+
+
       if (not tagset) or (not skein.tags[codeblock] 'noKnit') then
          for knitter in pairs(knit_set) do
-            if knitter.code_type == code_type then
+            if knitter.code_type == code_type and knitter.OLD then
                knitter.knit(codeblock, knitted[code_type], skein)
             end
             if knitter.pred(codeblock, skein) then
