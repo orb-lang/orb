@@ -156,23 +156,8 @@ function Knit.knit(knitter, skein)
       knitted = {}
       skein.knitted = knitted
    end
-   -- specialize the knitter collection and create scrolls for each type
-   -- we stop doing this with Knitters.
-   local knit_set = Set()
-   local new_knitters = {}
-   -- no new-type knitters exist yet, but they will.
-   for code_type, knitter in pairs(knitters) do
-      if not knitter.OLD then
-         new_knitters[code_type] = knitter
-      end
-   end
-   for codeblock in doc :select 'codeblock' do
-      local code_type = codeblock :select 'code_type'()
-      knit_set:insert(knitters[code_type and code_type:span()])
-   end
-   for knitter, _ in pairs(knit_set) do
-      _haveScroll(skein, knitter.code_type)
-   end
+   local new_knitters = knitters
+
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'() :span()
       local tagset = skein.tags[codeblock]
@@ -188,18 +173,6 @@ function Knit.knit(knitter, skein)
             if knitter:examine(skein, codeblock) then
                local scroll = _haveScroll(skein, code_type)
                knitter:knit(skein, codeblock, scroll)
-            end
-         end
-      end
-
-
-      if (not tagset) or (not skein.tags[codeblock] 'noKnit') then
-         for knitter in pairs(knit_set) do
-            if knitter.code_type == code_type and knitter.OLD then
-               knitter.knit(codeblock, knitted[code_type], skein)
-            end
-            if knitter.OLD and knitter.pred(codeblock, skein) then
-               knitter.pred_knit(codeblock, knitted[knitter.code_type], skein)
             end
          end
       end
