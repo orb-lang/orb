@@ -81,28 +81,23 @@ local c_noknit = require "orb:knit/predicator" "#asLua"
 ## C Knitter
 
 ```lua
-local c_knit = {OLD = true}
+local C_knit = require "orb:knit/knitter" "c"
 ```
 
 
-### Code type
+### C\_knit:examine\(skein, codeblock\)
+
+C code tagged `#asLua` should not be knit, although we may provide a way to
+override this so that both happen\.
 
 ```lua
-c_knit.code_type = "c"
-```
-
-
-### Predicate
-
-We don't have any C predicates, so this returns `false`\.
-
-This should mean that `c_knit.knit_pred` is never called, but it's bad
-practice to leave a `nil` where a function is expected\.
-
-```lua
-c_knit.pred = function() return false end
-
-c_knit.knit_pred = function() return end
+function C_knit.examine(c_knit, skein, codeblock)
+   if c_noknit(codeblock, skein) then
+      return false
+   else
+      return true
+   end
+end
 ```
 
 
@@ -110,8 +105,7 @@ c_knit.knit_pred = function() return end
 
 
 ```lua
-function c_knit.knit(codeblock, scroll, skein)
-   if c_noknit(codeblock, skein) then return end
+function C_knit.knit(c_knit, skein, codeblock, scroll)
    local codebody = codeblock :select "code_body" ()
    local line_start, _ , line_end, _ = codebody:linePos()
    for i = scroll.line_count, line_start - 1 do
@@ -125,5 +119,5 @@ end
 ```
 
 ```lua
-return c_knit
+return C_knit
 ```

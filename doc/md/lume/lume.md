@@ -448,7 +448,7 @@ local commitBundle, commitSkein = assert(database.commitBundle),
 local writeArtifacts = assert(database.writeArtifacts)
 local status = coroutine.status
 
-local bail_at = 4096
+local warn_at = 4096
 
 function Lume.persist(lume)
    local persistor = uv.new_idle()
@@ -466,14 +466,15 @@ function Lume.persist(lume)
          end
          report = report * 2
       end
-      if check > bail_at then
-         s:warn("many cycles, lume.count: %d, waiting for git: %s",
-                lume.count,
-                tostring(not (lume.git_info.complete == true)))
+      if check > warn_at then
+         s:warn("many cycles, lume.count: %d",
+                lume.count)
          check = 0
-         bail_at = bail_at * 2
-         for co in pairs(lume.inflight) do
+         warn_at = warn_at * 2
+         for co, skein in pairs(lume.inflight) do
             if status(co) == 'dead' then
+               s:chat("broken coroutine in processing %s",
+                       tostring(skein.source.file))
                lume.inflight[co] = nil
                lume.count = lume.count - 1
             end
@@ -484,11 +485,6 @@ function Lume.persist(lume)
       -- stop the idle, we block to completion
       persistor:stop()
       lume.persisting = false
-
-      -- report failed coroutines
-      for _, skein in pairs(lume.inflight) do
-         s:verb("failed to process: %s", tostring(skein.source.file))
-      end
       -- set up transaction
       -- this blocks now, and it should it's a transaction.
       local conn = lume.conn

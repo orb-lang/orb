@@ -21,7 +21,7 @@ local PlantUML = require "orb:knit/knitter" "plantuml"
 
 
 
-function PlantUML.examine()
+function PlantUML.examine(plant, skein, codeblock)
    return true
 end
 

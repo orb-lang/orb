@@ -21,7 +21,7 @@ This is only called right now if `#!plantuml` is the codeblock so we're going
 to hotwire it\.
 
 ```lua
-function PlantUML.examine()
+function PlantUML.examine(plant, skein, codeblock)
    return true
 end
 ```

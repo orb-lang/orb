@@ -71,14 +71,7 @@ local c_noknit = require "orb:knit/predicator" "#asLua"
 
 
 
-local c_knit = {OLD = true}
-
-
-
-
-
-
-c_knit.code_type = "c"
+local C_knit = require "orb:knit/knitter" "c"
 
 
 
@@ -88,20 +81,21 @@ c_knit.code_type = "c"
 
 
 
+function C_knit.examine(c_knit, skein, codeblock)
+   if c_noknit(codeblock, skein) then
+      return false
+   else
+      return true
+   end
+end
 
 
-c_knit.pred = function() return false end
-
-c_knit.knit_pred = function() return end
 
 
 
 
 
-
-
-function c_knit.knit(codeblock, scroll, skein)
-   if c_noknit(codeblock, skein) then return end
+function C_knit.knit(c_knit, skein, codeblock, scroll)
    local codebody = codeblock :select "code_body" ()
    local line_start, _ , line_end, _ = codebody:linePos()
    for i = scroll.line_count, line_start - 1 do
@@ -115,5 +109,5 @@ end
 
 
 
-return c_knit
+return C_knit
 

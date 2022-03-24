@@ -4,56 +4,29 @@
 
 
 
+local core = require "qor:core"
+local Set = assert(core.set)
 
-
-
-
-local predicator = require "orb:knit/predicator"
 local s = require "status:status" ()
 
 
 
-local lua_knit = {OLD = true}
+local Lua_knit = require "orb:knit/knitter" "lua"
 
 
 
 
 
 
-
-
-
-lua_knit.code_type = "lua"
-
+Lua_knit.tags = Set {'asLua'}
 
 
 
 
 
 
-
-
-lua_knit.pred = predicator "asLua"
-
-
-
-
-
-
-
-
-
-
-function lua_knit.knit(codeblock, scroll, skein)
-   local codebody = codeblock :select "code_body" ()
-   local line_start, _ , line_end, _ = codebody:linePos()
-   for i = scroll.line_count, line_start - 1 do
-      scroll:add "\n"
-   end
-   scroll:add(codebody)
-   -- add an extra line and skip 2, to get a newline at EOF
-   scroll:add "\n"
-   scroll.line_count = line_end + 2
+function Lua_knit.examine()
+   return true
 end
 
 
@@ -86,7 +59,7 @@ end
 local find_str = L.Ct(((-end_str_P * 1)^0
                       * (L.Cp() * end_str_P * L.Cp()) / _disp)^1)
 
-function lua_knit.pred_knit(codeblock, scroll, skein)
+function _pred_knit(codeblock, scroll, skein)
    local name = codeblock:select "name"()
    local codetype = codeblock:select("code_type")():span()
    local header, str_start = "", " = ["
@@ -134,5 +107,28 @@ end
 
 
 
-return lua_knit
+
+
+function Lua_knit.knit(lua_knit, skein, codeblock, scroll)
+   local tags = skein.tags[codeblock]
+   -- old sets!
+   if tags and tags("asLua") then
+      _pred_knit(codeblock, scroll, skein)
+   else
+      local codebody = codeblock :select "code_body" ()
+      local line_start, _ , line_end, _ = codebody:linePos()
+      for i = scroll.line_count, line_start - 1 do
+         scroll:add "\n"
+      end
+      scroll:add(codebody)
+      -- add an extra line and skip 2, to get a newline at EOF
+      scroll:add "\n"
+      scroll.line_count = line_end + 2
+   end
+end
+
+
+
+
+return Lua_knit
 

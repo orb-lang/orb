@@ -54,7 +54,7 @@ taken on the skein.
 
 - source:  The artifacts of the source file:
 
-  - path:  The Path of the original document.
+  - file:  The Path of the original document.
 
   - text:  String representing the contents of the document file.
 
@@ -550,9 +550,12 @@ local function new(path, lume)
    if not path then
       error "Skein must be constructed with a path"
    end
+   local file;
    -- handles: string, Path, or File objects
    if type(path) == 'string' or path.idEst ~= File then
-      path = File(Path(path):absPath())
+      file = File(Path(path):absPath())
+   else
+      file = path
    end
    if lume then
       skein.lume = lume
@@ -568,7 +571,7 @@ local function new(path, lume)
    end
 
    skein.source.relpath = Path(tostring(path)):relPath(skein.source_base)
-   skein.source.file = path
+   skein.source.file = file
    return skein
 end
 

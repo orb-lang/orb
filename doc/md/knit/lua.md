@@ -3,62 +3,35 @@
 
  Our workhorse\.
 
-Knitters are provided as a simple table with a common format\.
-
-We may want to add a base class at some point, if it proves necessary\.
-
 ```lua
-local predicator = require "orb:knit/predicator"
+local core = require "qor:core"
+local Set = assert(core.set)
+
 local s = require "status:status" ()
 ```
 
 ```lua
-local lua_knit = {OLD = true}
+local Lua_knit = require "orb:knit/knitter" "lua"
 ```
 
 
-### code\_type
-
-A knitter is always applied if the `code_type` field of the `codeblock`
-matches this string\.
+We will use this, but it's hardwired in knit for now\.
 
 ```lua
-lua_knit.code_type = "lua"
+Lua_knit.tags = Set {'asLua'}
 ```
 
 
-### lua\_knit\.pred\(codeblock\)
-
-A `pred`icate function which determines whether to apply the knitter if the
-`code_type` is something else\.
+### Lua\_knit\.examine\(lua\_knit, skein, codeblock, from\_tag\)
 
 ```lua
-lua_knit.pred = predicator "asLua"
-```
-
-
-### lua\_knit\.knit\(codeblock, scroll, skein\)
-
-For knitting under standard conditions\.
-
-Adds contents to the `scroll`, no return value\.
-
-```lua
-function lua_knit.knit(codeblock, scroll, skein)
-   local codebody = codeblock :select "code_body" ()
-   local line_start, _ , line_end, _ = codebody:linePos()
-   for i = scroll.line_count, line_start - 1 do
-      scroll:add "\n"
-   end
-   scroll:add(codebody)
-   -- add an extra line and skip 2, to get a newline at EOF
-   scroll:add "\n"
-   scroll.line_count = line_end + 2
+function Lua_knit.examine()
+   return true
 end
 ```
 
 
-### lua\_knit\.pred\_knit\(codeblock, scroll, skein\)
+### \_pred\_knit\(codeblock, scroll, skein\)
 
 For knitting a matched predicate\.
 
@@ -86,7 +59,7 @@ end
 local find_str = L.Ct(((-end_str_P * 1)^0
                       * (L.Cp() * end_str_P * L.Cp()) / _disp)^1)
 
-function lua_knit.pred_knit(codeblock, scroll, skein)
+function _pred_knit(codeblock, scroll, skein)
    local name = codeblock:select "name"()
    local codetype = codeblock:select("code_type")():span()
    local header, str_start = "", " = ["
@@ -133,6 +106,29 @@ function lua_knit.pred_knit(codeblock, scroll, skein)
 end
 ```
 
+### Lua\_knit:knit\(skein, codeblock, scroll\)
+
 ```lua
-return lua_knit
+function Lua_knit.knit(lua_knit, skein, codeblock, scroll)
+   local tags = skein.tags[codeblock]
+   -- old sets!
+   if tags and tags("asLua") then
+      _pred_knit(codeblock, scroll, skein)
+   else
+      local codebody = codeblock :select "code_body" ()
+      local line_start, _ , line_end, _ = codebody:linePos()
+      for i = scroll.line_count, line_start - 1 do
+         scroll:add "\n"
+      end
+      scroll:add(codebody)
+      -- add an extra line and skip 2, to get a newline at EOF
+      scroll:add "\n"
+      scroll.line_count = line_end + 2
+   end
+end
+```
+
+
+```lua
+return Lua_knit
 ```

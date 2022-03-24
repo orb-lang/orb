@@ -40,12 +40,13 @@ Knitter.code_type = nil
 ```
 
 
-### tags: \{string\}
+### tags: \#\{string\}
 
 These are the tags a given knitter might take action on\.
 
-We will probably accept e\.g\. `'#noKnit'` and `'noKnit'` as equivalent, but we
-don't, and I'm using the full hashtag form\.
+We remove the hash from tags, so do likewise: `"example"` not `"#example"`\.
+
+Another bespoke type annotation\! Use `core.set`\.
 
 ```lua
 Knitter.tags = {}
