@@ -124,11 +124,11 @@ Knit.__index = Knit
 
 
 
-
-
 local function _haveScroll(skein, code_type)
    -- idempotent decorator
-   if skein.knitted[code_type] then return end
+   if skein.knitted[code_type] then
+      return skein.knitted[code_type]
+   end
 
    local knitted = skein.knitted
    local scroll = Scroll()
@@ -139,6 +139,7 @@ local function _haveScroll(skein, code_type)
                     :subFor(skein.source_base,
                             skein.knit_base,
                             code_type)
+   return scroll
 end
 
 
