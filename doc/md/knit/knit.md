@@ -181,6 +181,7 @@ function Knit.knit(knitter, skein)
       for _type, knitter in pairs(new_knitters) do
          if _type == code_type then -- ignore tags, this is temporary
             if knitter:examine(codeblock) then
+               local scroll = _haveScroll(skein, code_type)
                knitter:knit(skein, codeblock, scroll)
             end
          end

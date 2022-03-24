@@ -108,3 +108,7 @@ Knitter.examine = assert(cluster.ur.no)
 
 Knitter.knit = assert(cluster.ur.NYI)
 
+
+
+return new
+

@@ -15,6 +15,10 @@ s.chatty = true
 local plantUML = {code_type = 'plantuml', OLD = true}
 ```
 
+```lua
+local PlantUML = require "orb:knit/knitter" "plantuml"
+```
+
 Just for now, we're going to just knit it\.
 
 ```lua
@@ -42,6 +46,32 @@ function plantUML.knit(code_block, scroll, skein)
 end
 ```
 
+This is only called right now if `#!plantuml` is the codeblock so we're going
+to hotwire it\.
+
 ```lua
-return plantUML
+function PlantUML.examine()
+   return true
+end
+```
+
+```lua
+function PlantUML.knit(plant, skein, codeblock, scroll)
+   spawn = spawn or require "proc:spawn"
+   local proc = spawn("plantuml", {"-tsvg", "-pipe"})
+   if proc.didnotrun then
+      s:warn "plantuml didn't run, is it installed?"
+      return
+   end
+   s:verb "writing plantuml"
+   proc:write(codeblock :select "code_body"() :span())
+   local reddit = assert(proc:read(), debug.traceback())
+   s:chat(reddit)
+   scroll:add(reddit)
+   proc:exit() -- we can do better than this
+end
+```
+
+```lua
+return PlantUML
 ```

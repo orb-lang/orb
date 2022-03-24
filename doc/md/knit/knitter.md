@@ -109,5 +109,8 @@ It should be an error to call this without implementing it:
 Knitter.knit = assert(cluster.ur.NYI)
 ```
 
+```lua
+return new
+```
 
 
