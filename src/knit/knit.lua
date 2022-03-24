@@ -193,7 +193,7 @@ function Knit.knit(knitter, skein)
             if knitter.code_type == code_type and knitter.OLD then
                knitter.knit(codeblock, knitted[code_type], skein)
             end
-            if knitter.pred(codeblock, skein) then
+            if knitter.OLD and knitter.pred(codeblock, skein) then
                knitter.pred_knit(codeblock, knitted[knitter.code_type], skein)
             end
          end
