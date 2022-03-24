@@ -169,7 +169,6 @@ function Knit.knit(knitter, skein)
       -- this takes over
       for _type, knitter in pairs(new_knitters) do
          if _type == code_type then
-
             if knitter:examine(skein, codeblock) then
                local scroll = _haveScroll(skein, code_type)
                knitter:knit(skein, codeblock, scroll)

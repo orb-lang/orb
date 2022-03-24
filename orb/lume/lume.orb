@@ -394,6 +394,7 @@ local function _loader(skein, lume, path)
    lume.inflight[co] = skein
    -- one stage per line for nice stack traces
    skein :load() -- yields
+         -- :filter()  -- #NYI
          :spin()
          :tag()
          :tagAct()

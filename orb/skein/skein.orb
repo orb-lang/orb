@@ -219,17 +219,6 @@ end
 #/lua
 
 
-*** Skein:format()
-
-#NYI, this will perform formatting inside the Orb portion of documents.
-
-#!lua
-function Skein.format(skein)
-   return skein
-end
-#/lua
-
-
 *** Skein:tag()
 
 This one is immodestly complex, and gets implemented in its own module.
@@ -266,6 +255,17 @@ function Skein.tagAct(skein)
          skein.manifest(block)
       end
    end
+   return skein
+end
+#/lua
+
+
+*** Skein:format()
+
+#NYI, this will perform formatting inside the Orb portion of documents.
+
+#!lua
+function Skein.format(skein)
    return skein
 end
 #/lua
@@ -521,6 +521,8 @@ function Skein.transform(skein)
      : load()
      : filter()
      : spin()
+     : tag()
+     : tagAct()
      : knit()
      : weave()
      : compile()
