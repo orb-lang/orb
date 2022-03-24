@@ -445,7 +445,7 @@ local commitBundle, commitSkein = assert(database.commitBundle),
 local writeArtifacts = assert(database.writeArtifacts)
 local status = coroutine.status
 
-local BAIL_AT = 4096
+local bail_at = 4096
 
 function Lume.persist(lume)
    local persistor = uv.new_idle()
@@ -463,11 +463,12 @@ function Lume.persist(lume)
          end
          report = report * 2
       end
-      if check > BAIL_AT then
+      if check > bail_at then
          s:warn("many cycles, lume.count: %d, waiting for git: %s",
                 lume.count,
                 tostring(not (lume.git_info.complete == true)))
          check = 0
+         bail_at = bail_at * 2
          for co in pairs(lume.inflight) do
             if status(co) == 'dead' then
                lume.inflight[co] = nil
