@@ -98,7 +98,6 @@
 
 
 local Scroll = require "scroll:scroll"
-local Set = require "set:set"
 
 
 
@@ -133,8 +132,8 @@ local function _haveScroll(skein, code_type)
    local knitted = skein.knitted
    local scroll = Scroll()
    knitted[code_type] = scroll
-   -- #todo this bakes in assumptions we wish to relax
    scroll.line_count = 1
+   -- #todo this bakes in assumptions we wish to relax
    scroll.path = skein.source.file.path
                     :subFor(skein.source_base,
                             skein.knit_base,
@@ -161,6 +160,9 @@ function Knit.knit(knitter, skein)
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'() :span()
       local tagset = skein.tags[codeblock]
+      if tagset and tagset("noKnit") then
+         goto continue
+      end
       -- special case asLua blocks, for now
       if tagset and tagset("asLua") then
          local scroll = _haveScroll(skein, 'lua')
@@ -175,6 +177,7 @@ function Knit.knit(knitter, skein)
             end
          end
       end
+      ::continue::
    end
    -- clean up unused scrolls
    for code_type, scroll in pairs(knitted) do

@@ -471,8 +471,8 @@ function Lume.persist(lume)
          warn_at = warn_at * 2
          for co, skein in pairs(lume.inflight) do
             if status(co) == 'dead' then
-               s:chat("broken coroutine in processing %s",
-                       tostring(skein.source.file))
+               s:chat("broken coroutine in processing %s: %s",
+                       tostring(skein.source.file), debug.traceback(co))
                lume.inflight[co] = nil
                lume.count = lume.count - 1
             end
