@@ -369,3 +369,22 @@ return function(skein)
    return skein
 end
 ```
+
+
+## Revamp
+
+This implementation is brittle, and worse, it has bad big O complexity\.
+
+Because capital tags apply to parents, siblings, and children \(in an
+immoderately complex way\), we have to visit everything twice: once looking for
+tags and taggables, and once applying the former to the latter\.
+
+The tag engine has the advantage that it's generic: what we do with the tags
+provides an interface for them to be used throughout Orb, without particular
+reference to what we do with them\.
+
+We will add org\-mode style categories pretty soon, and they behave the same
+way as tags, so we can collect and apply them at the same time\.
+
+The composable version of this is, I *think* a transducer, and once I nail
+those we'll use them all over Node transformations to coalesce passes\.

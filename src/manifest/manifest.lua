@@ -151,7 +151,11 @@ end
 
 local function _call(manifest, msg)
    s:bore "entering manifest()"
-   assert(type(msg)  == 'table', "argument to manifest must be a table")
+   if not type(msg) == 'table' then
+      s:warn("oopsie in manifest of type %s", type(msg))
+      return
+   end
+   --assert(type(msg)  == 'table', "argument to manifest must be a table")
    -- otherwise this should be a codeblock or a Skein
    if msg.idEst and msg.idEst == Skein then
       s:bore("manifest was given a skein")
@@ -160,7 +164,7 @@ local function _call(manifest, msg)
       s:bore("manifest was given a codeblock")
       _addBlock(manifest, msg)
    else
-      error("unusable table passed to manifest" .. debug.traceback())
+      s:warn "unusable table passed to manifest"
    end
    s:bore "leaving manifest()"
 end

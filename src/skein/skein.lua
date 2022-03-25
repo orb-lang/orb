@@ -224,17 +224,6 @@ end
 
 
 
-function Skein.format(skein)
-   return skein
-end
-
-
-
-
-
-
-
-
 
 
 Skein.tag = require "orb:tag/tagger"
@@ -266,6 +255,17 @@ function Skein.tagAct(skein)
          skein.manifest(block)
       end
    end
+   return skein
+end
+
+
+
+
+
+
+
+
+function Skein.format(skein)
    return skein
 end
 
@@ -521,12 +521,52 @@ function Skein.transform(skein)
      : load()
      : filter()
      : spin()
+     : tag()
+     : tagAct()
      : knit()
      : weave()
      : compile()
      : transact(db.stmts, db.ids, db.git_info, skein.lume:now())
      : persist()
    return skein
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local empty_set = require "set:set" ()
+
+function Skein.tagsFor(skein, node)
+   local tags = assert(skein.tags, "Skein has not been tagged")
+   return tags[node] or empty_set
 end
 
 
@@ -550,9 +590,12 @@ local function new(path, lume)
    if not path then
       error "Skein must be constructed with a path"
    end
+   local file;
    -- handles: string, Path, or File objects
    if type(path) == 'string' or path.idEst ~= File then
-      path = File(Path(path):absPath())
+      file = File(Path(path):absPath())
+   else
+      file = path
    end
    if lume then
       skein.lume = lume
@@ -568,7 +611,7 @@ local function new(path, lume)
    end
 
    skein.source.relpath = Path(tostring(path)):relPath(skein.source_base)
-   skein.source.file = path
+   skein.source.file = file
    return skein
 end
 

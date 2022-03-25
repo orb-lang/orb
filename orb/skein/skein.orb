@@ -533,6 +533,44 @@ end
 #/lua
 
 
+** Reports
+
+There's a lot of reaching into the Skein for things, and most of this should
+be replaced with reporting methods.
+
+The chaining methods will all perform prior stages if they are missing
+information, the opposite applies to reports.
+
+Report methods make two guarantees, in fact: they won't trigger any stage
+methods, and they won't mutate any data on the Skein.
+
+
+*** Skein:tagsFor(node)
+
+We have a map of Nodes which are tagged by the tagger, to a set of those tags,
+or nil.
+
+This lets us return a "no tags" empty set so that we don't have to keep
+looking for an empty set of tags before checking what we want to know, which
+is if a tag applies.
+
+
+**** empty_set
+
+This will return =nil= for =empty_set(val)= and =empty_set[val]=, at least for
+tables, which are what the elements are. This is forward compatible with the
+upcoming switch to =core.set=, which uses ordinary indexing.
+
+#!lua
+local empty_set = require "set:set" ()
+
+function Skein.tagsFor(skein, node)
+   local tags = assert(skein.tags, "Skein has not been tagged")
+   return tags[node] or empty_set
+end
+#/lua
+
+
 *** Skein:
 
 

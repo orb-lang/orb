@@ -159,12 +159,12 @@ function Knit.knit(knitter, skein)
 
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'() :span()
-      local tagset = skein.tags[codeblock]
-      if tagset and tagset("noKnit") then
+      local tagset = skein:tagsFor(codeblock)
+      if tagset("noKnit") then
          goto continue
       end
       -- special case asLua blocks, for now
-      if tagset and tagset("asLua") then
+      if tagset("asLua") then
          local scroll = _haveScroll(skein, 'lua')
          new_knitters.lua:knit(skein, codeblock, scroll)
       end

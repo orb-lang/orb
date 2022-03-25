@@ -57,7 +57,7 @@ taken on the skein\.
 
 - source:  The artifacts of the source file:
 
-  - path:  The Path of the original document\.
+  - file:  The Path of the original document\.
 
   - text:  String representing the contents of the document file\.
 
@@ -226,17 +226,6 @@ end
 ```
 
 
-### Skein:format\(\)
-
-\#NYI
-
-```lua
-function Skein.format(skein)
-   return skein
-end
-```
-
-
 ### Skein:tag\(\)
 
 This one is immodestly complex, and gets implemented in its own module\.
@@ -273,6 +262,17 @@ function Skein.tagAct(skein)
          skein.manifest(block)
       end
    end
+   return skein
+end
+```
+
+
+### Skein:format\(\)
+
+\#NYI
+
+```lua
+function Skein.format(skein)
    return skein
 end
 ```
@@ -528,12 +528,52 @@ function Skein.transform(skein)
      : load()
      : filter()
      : spin()
+     : tag()
+     : tagAct()
      : knit()
      : weave()
      : compile()
      : transact(db.stmts, db.ids, db.git_info, skein.lume:now())
      : persist()
    return skein
+end
+```
+
+
+## Reports
+
+There's a lot of reaching into the Skein for things, and most of this should
+be replaced with reporting methods\.
+
+The chaining methods will all perform prior stages if they are missing
+information, the opposite applies to reports\.
+
+Report methods make two guarantees, in fact: they won't trigger any stage
+methods, and they won't mutate any data on the Skein\.
+
+
+### Skein:tagsFor\(node\)
+
+We have a map of Nodes which are tagged by the tagger, to a set of those tags,
+or nil\.
+
+This lets us return a "no tags" empty set so that we don't have to keep
+looking for an empty set of tags before checking what we want to know, which
+is if a tag applies\.
+
+
+#### empty\_set
+
+This will return `nil` for `empty_set(val)` and `empty_set[val]`, at least for
+tables, which are what the elements are\. This is forward compatible with the
+upcoming switch to `core.set`, which uses ordinary indexing\.
+
+```lua
+local empty_set = require "set:set" ()
+
+function Skein.tagsFor(skein, node)
+   local tags = assert(skein.tags, "Skein has not been tagged")
+   return tags[node] or empty_set
 end
 ```
 
@@ -557,9 +597,12 @@ local function new(path, lume)
    if not path then
       error "Skein must be constructed with a path"
    end
+   local file;
    -- handles: string, Path, or File objects
    if type(path) == 'string' or path.idEst ~= File then
-      path = File(Path(path):absPath())
+      file = File(Path(path):absPath())
+   else
+      file = path
    end
    if lume then
       skein.lume = lume
@@ -575,7 +618,7 @@ local function new(path, lume)
    end
 
    skein.source.relpath = Path(tostring(path)):relPath(skein.source_base)
-   skein.source.file = path
+   skein.source.file = file
    return skein
 end
 

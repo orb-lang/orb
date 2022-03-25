@@ -8,7 +8,7 @@
 
 
 local Peg = require "espalier:peg"
-local Set = require "set:set"
+local Set = require "qor:core" . set -- could be using 'qor' below
 local core = require "core:core"
 local Twig = require "orb:orb/metas/twig"
 local fragments = require "orb:orb/fragments"
@@ -227,7 +227,7 @@ local prose_fn;
 local function _prosePost(prose)
    -- walk manually to replace note-bodies
    for i, node in ipairs(prose) do
-     if bookends(node.id) then
+     if bookends[node.id] then
         _fillGen(node)
      elseif node.id == 'note_prose' then
         prose[i] = prose_fn(node)
@@ -239,7 +239,7 @@ end
 
 local function _prosePost(prose)
    for node in prose:walk() do
-     if bookends(node.id) then
+     if bookends[node.id] then
         _fillGen(node)
      end
    end
