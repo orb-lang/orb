@@ -6,7 +6,7 @@ Every Node in Orb inherits from this common table.
 #!lua
 local Node = require "espalier:espalier/node"
 local a = require "anterm:anterm"
-local Set = require "set:set"
+local Set = require "qor:core" . set
 local Codepoints = require "singletons:singletons/codepoints"
 local Phrase = require "singletons:singletons/phrase"
 #/lua
@@ -106,7 +106,7 @@ function Twig.toMarkdown(twig, scroll, skein)
    if #twig == 0 then
       local points = Codepoints(twig:span())
       for i , point in ipairs(points) do
-         if md_special(point) then
+         if md_special[point] then
             points[i] = "\\" .. point
          end
       end

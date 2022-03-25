@@ -160,7 +160,7 @@ local function _call(manifest, msg)
       s:bore("manifest was given a codeblock")
       _addBlock(manifest, msg)
    else
-      error("unusable table passed to manifest")
+      error("unusable table passed to manifest" .. debug.traceback())
    end
    s:bore "leaving manifest()"
 end
