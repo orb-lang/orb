@@ -579,6 +579,35 @@ end
 
 
 
+function Skein.knitScroll(skein, knitter)
+   local code_type = knitter.code_type
+   -- idempotent decorator
+   if skein.knitted[code_type] then
+      return skein.knitted[code_type]
+   end
+
+   local knitted = skein.knitted
+   local scroll = Scroll()
+   knitted[code_type] = scroll
+   scroll.line_count = 1
+   -- #todo this bakes in assumptions we wish to relax
+   scroll.path = skein.source.file.path
+                    :subFor(skein.source_base,
+                            skein.knit_base,
+                            code_type)
+   return scroll
+end
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -62,8 +62,6 @@ packages\.
 
 ## builder
 
-
-
 ```lua
 cluster.construct(new, function(_new, knitter, code_type)
    assert(type(code_type) == 'string', "#1 must be a string")
@@ -104,10 +102,36 @@ This might not be the right interface, but it's the one we're using right now\.
 
 It precludes more than one artifact per code type, which is probably invalid\.
 
-It should be an error to call this without implementing it:
+Near\-term spoiler alert, scroll will be something which can either be a single
+scroll or a scroll wrangler\.
+
+We have a sensible base implementation of a knitter, which merely pads the
+scroll with enough lines to align sorcery and source, and inserts the lines
+into the scroll\.
+
+Scroll has exhibited the kind of subtle bugs where I honestly wonder if the
+JIT is corrupting things without noticing, since the Heisenbug is a case of
+corrupting a trace record and noticing\. Or just sefaulting it does that as
+well sometimes\.
+
+It has some sessions but it could well use more\.
+
+Here I go, using the Orb file as my livejournal again\.
+
+Shoganai\.
 
 ```lua
-Knitter.knit = assert(cluster.ur.NYI)
+function Knitter.knit(knitter, skein, codeblock, scroll)
+   local codebody = codeblock :select "code_body" ()
+   local line_start, _ , line_end, _ = codebody:linePos()
+   for i = scroll.line_count, line_start - 1 do
+      scroll:add "\n"
+   end
+   scroll:add(codebody)
+   -- add an extra line and skip 2, to get a newline at EOF
+   scroll:add "\n"
+   scroll.line_count = line_end + 2
+end
 ```
 
 ```lua

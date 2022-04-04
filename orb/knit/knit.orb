@@ -97,7 +97,8 @@ Making this general, eloquent, and extensible, will take a few iterations.
 **** imports
 
 #!lua
-local Scroll = require "scroll:scroll"
+local s = require "status:status" ()
+s.boring = false
 #/lua
 
 We're including the knitters as a local, which we don't want to do.
@@ -118,30 +119,6 @@ Knit.__index = Knit
 #/lua
 
 
-**** _haveScroll(skein, code_type) -> Scroll
-
-Decorates the skein with a Scroll if necessary, and returns it.
-
-#!lua
-local function _haveScroll(skein, code_type)
-   -- idempotent decorator
-   if skein.knitted[code_type] then
-      return skein.knitted[code_type]
-   end
-
-   local knitted = skein.knitted
-   local scroll = Scroll()
-   knitted[code_type] = scroll
-   scroll.line_count = 1
-   -- #todo this bakes in assumptions we wish to relax
-   scroll.path = skein.source.file.path
-                    :subFor(skein.source_base,
-                            skein.knit_base,
-                            code_type)
-   return scroll
-end
-#/lua
-
 
 #!lua
 local insert = assert(table.insert)
@@ -155,7 +132,7 @@ function Knit.knit(knitter, skein)
       knitted = {}
       skein.knitted = knitted
    end
-   local new_knitters = knitters
+   local knitters = knitters
 
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'() :span()
@@ -165,14 +142,15 @@ function Knit.knit(knitter, skein)
       end
       -- special case asLua blocks, for now
       if tagset("asLua") then
-         local scroll = _haveScroll(skein, 'lua')
-         new_knitters.lua:knit(skein, codeblock, scroll)
+         local scroll = skein:knitScroll(knitters.lua)
+         knitters.lua:knit(skein, codeblock, scroll)
       end
       -- this takes over
-      for _type, knitter in pairs(new_knitters) do
+      for _type, knitter in pairs(knitters) do
          if _type == code_type then
+            s:bore("block of type %s", _type)
             if knitter:examine(skein, codeblock) then
-               local scroll = _haveScroll(skein, code_type)
+               local scroll = skein:knitScroll(knitter)
                knitter:knit(skein, codeblock, scroll)
             end
          end

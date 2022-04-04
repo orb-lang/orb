@@ -31,40 +31,10 @@ ignore these, and come up with a general solution as we go\.
 Our runtime is written in C, and is the only internal piece of code which
 isn't written in Orb\.  It's time to change that, so we need a C knitter\.
 
+
 #### Interface
 
-A knitter must expose these fields:
-
-
-- code\_type:  A string corresponding to the `code-type` field of a Doc\.
-    E\.g\. `lua` for Lua source code\.
-
-    This should probably be
-
-
-- pred:  A function to determine if a non\-code\_type code block
-    should be parsed by the knitter\.  Must return `true` or
-    `false`\.
-
-  - params:
-
-    - codeblock:  A Node of class codeblock\.
-
-
-- knit:  A function to knit an ordinary codeblock of type `code_type`
-
-   - params:
-
-     - codeblock:  A Node of class codeblock\.
-
-     - scroll:  The scroll in which the knit is to be inserted\.
-
-     - skein:  The skein, holding all additional state, such as the original
-         Doc, file paths, and so on\.
-
-
-- knit\_pred:  A function to knit a codeblock matching the predicate\.  Same
-    parameters as `knit`\.
+Much simpler than it was\.
 
 
 #### imports
@@ -100,23 +70,6 @@ function C_knit.examine(c_knit, skein, codeblock)
 end
 ```
 
-
-### Knitter
-
-
-```lua
-function C_knit.knit(c_knit, skein, codeblock, scroll)
-   local codebody = codeblock :select "code_body" ()
-   local line_start, _ , line_end, _ = codebody:linePos()
-   for i = scroll.line_count, line_start - 1 do
-      scroll:add "\n"
-   end
-   scroll:add(codebody)
-   -- add an extra line and skip 2, to get a newline at EOF
-   scroll:add "\n"
-   scroll.line_count = line_end + 2
-end
-```
 
 ```lua
 return C_knit

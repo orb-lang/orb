@@ -514,7 +514,6 @@ function Lume.persist(lume)
       lume.db.ids.bundle_id = nil
       lume.db.now = nil
       s:verb "transaction complete"
-      -- and persist to disk
       for skein in lume.tailored:popAll() do
          skein:persist()
       end

@@ -126,6 +126,11 @@ capture.
 So we want to post-process prose blocks and create Twigs for the missing
 syntactics.
 
+=.body= is not the class we want here. It should call the prose function again
+on the freshly constructed table; it should just return instances of =word=
+and =punct= but well. We need testing here and an algorithm which can
+accomodate unwrapping the single return value in place.
+
 #!lua
 local bounds = { bold      = "*",
                  italic    = "/",
