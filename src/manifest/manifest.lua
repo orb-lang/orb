@@ -67,7 +67,7 @@
 local meta = require "core:core/cluster" . Meta
 local s = require "status:status" ()
 s.verbose = true
-s.boring = false
+s.boring = true
 
 local Skein = require "orb:skein/skein"
 
