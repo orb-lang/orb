@@ -95,15 +95,22 @@ local function _addTable(manifest, tab)
    end
 end
 
-local function _addBlock(manifest, block)
+local function _addNode(manifest, block)
    -- quick sanity check
    assert(block and block.isNode, "manifest() must receive a Node")
+   -- codeblocks are all we know (for now)
+   if not (block.id == 'codeblock')then
+      s:verb("found a %s node tagged with #manifest, no action", block.id)
+      return
+   end
+   -- toml is all we speak (for now)
    local code_type = block :select 'code_type' () :span()
    if code_type ~= 'toml' then
-      s:verb("don't know what to do with a %s codeblock tagged with #manifest",
+      s:chat("don't know what to do with a %s codeblock tagged with #manifest",
              code_type)
       return
    end
+
    local codebody = block :select 'code_body' () :span()
    local toml = Toml(codebody)
    if toml then
@@ -128,7 +135,7 @@ local function _addSkein(manifest, skein)
       for _, block in ipairs(nodes) do
          if block.id == 'codeblock' then
             s:verb "adding codeblock from Skein"
-            _addBlock(manifest, block)
+            _addNode(manifest, block)
          else
             s:verb("don't know what to do with a %s tagged "
                    .. "with #manifest", block.id)
@@ -160,11 +167,11 @@ local function _call(manifest, msg)
    if msg.idEst and msg.idEst == Skein then
       s:bore("manifest was given a skein")
       _addSkein(manifest, msg)
-   elseif msg.isNode and msg.id == 'codeblock' then
-      s:bore("manifest was given a codeblock")
-      _addBlock(manifest, msg)
+   elseif msg.isNode then
+      s:bore("manifest was given a node")
+      _addNode(manifest, msg)
    else
-      s:warn "unusable table passed to manifest"
+      s:warn("manifest given something weird, type %s", type(msg))
    end
    s:bore "leaving manifest()"
 end

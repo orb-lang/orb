@@ -60,6 +60,11 @@ method of runtime extension because we want knitters to be user extensible
 packages\.
 
 
+### :customScroll
+
+We set this to `false`, make it a function to generate a custom scroll\.
+
+
 ## builder
 
 ```lua

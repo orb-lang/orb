@@ -587,22 +587,38 @@ sophisticated things with manifests and tags\.
 
 ```lua
 function Skein.knitScroll(skein, knitter)
-   local code_type = knitter.code_type
-   -- idempotent decorator
-   if skein.knitted[code_type] then
-      return skein.knitted[code_type]
+   local code_type, knitted = knitter.code_type, skein.knitted
+   -- Right now we always return the same value
+   if knitted[code_type] then
+      return knitted[code_type]
    end
-
-   local knitted = skein.knitted
+   -- Adding custom "scrolls"
+   if knitter.customScroll then
+      local scroll = knitter:customScroll()
+      knitted[knitter.code_type] = scroll
+      return scroll
+   end
+   -- We do additional setup which customScroll is expected to handle
    local scroll = Scroll()
    knitted[code_type] = scroll
    scroll.line_count = 1
    -- #todo this bakes in assumptions we wish to relax
-   scroll.path = skein.source.file.path
+   scroll.path = skein:knitPathFor(code_type)
+   return scroll
+end
+```
+
+
+#### Skein:knitPathFor\(code\_type\)
+
+This lets us get at the Manifest to direct it eventually\.
+
+```lua
+function Skein.knitPathFor(skein, code_type)
+   return skein.source.file.path
                     :subFor(skein.source_base,
                             skein.knit_base,
                             code_type)
-   return scroll
 end
 ```
 

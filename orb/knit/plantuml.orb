@@ -8,6 +8,7 @@ That's fine.  They weren't meant to last.
 #!lua
 local s = require "status:status" ()
 s.chatty = true
+local Case = require "scroll:case"
 #/lua
 
 #!lua
@@ -16,6 +17,43 @@ local PlantUML = require "orb:knit/knitter" "plantuml"
 
 
 Going to need to brush up the knitting interface as I go, it's quite MVP.
+
+
+*** PlantUML:customScroll()
+
+
+**** The Challenge
+
+I'm going to hack in the behavior I need from plantUML, and back fill it with
+proper tag directives down the line.
+
+Part of the point of smoothing out the knitter interface now, is to let me
+add some technical debt here.
+
+- [ ] Goals:
+
+  1. [ ]:  Each named block becomes =name.svg=, and un-named blocks become
+           =documentname0n.svg=, presuming less than ten such blocks.
+
+  2. [ ]:  They are written to =/etc/img=, not =/src=.
+
+  3. [ ]:  The weave of the plantuml code block is replaced with a valid
+           IMG url.
+
+  4. [ ]:  These artifacts are cached by codeblock and only generated when the
+           hash changes.
+
+  5. [ ]:  This behavior is directed by tags and the manifest, not bolted
+           onto the side. This one we can expect to take awhile.
+
+#!lua
+function PlantUML.customScroll(plant, skein)
+   return Case()
+end
+#/lua
+
+
+*** PlantUML:examine(skein, codeblock)
 
 This is only called right now if =#!plantuml= is the codeblock so we're going
 to hotwire it.

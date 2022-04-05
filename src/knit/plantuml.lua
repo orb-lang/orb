@@ -8,10 +8,48 @@
 
 local s = require "status:status" ()
 s.chatty = true
+local Case = require "scroll:case"
 
 
 
 local PlantUML = require "orb:knit/knitter" "plantuml"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function PlantUML.customScroll(plant, skein)
+   return Case()
+end
 
 
 
