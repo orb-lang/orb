@@ -21,7 +21,7 @@ local function read(path)
       -- this is 800 pounds of gorilla we're bringing for one banana
       local lume = require "orb:lume/lume" (uv.cwd(), nil, true)
       local skein = Skein(mani_file):tailor()
-      manifest(Skein(mani_file), lume)
+      manifest(skein, lume)
    else
       s:verb("Didn't find a manifest.orb at %s", tostring(mani_file))
    end

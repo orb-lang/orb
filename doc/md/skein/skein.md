@@ -291,10 +291,11 @@ function Skein.knit(skein)
    end
    local ok, err = xpcall(knitter.knit, debug.traceback, knitter, skein)
    if not ok then
-      s:complain("failure to knit %s: %s", tostring(skein.source.file), err)
+      s:warn("failure to knit %s: %s", tostring(skein.source.file), err)
    end
+   -- this used to be a de-facto error but no longer is
    if not skein.knitted.lua then
-      s:warn("no Lua document produced from %s", tostring(skein.source.file))
+      s:verb("no Lua document produced from %s", tostring(skein.source.file))
    end
    return skein
 end
@@ -503,7 +504,11 @@ end
 ```lua
 function Skein.persist(skein)
    for code_type, scroll in pairs(skein.knitted) do
-      writeOnChange(scroll, scroll.path, skein.no_write)
+      if scroll.idEst == Scroll then
+         writeOnChange(scroll, scroll.path, skein.no_write)
+      else -- a case, soon
+
+      end
    end
    local md = skein.woven.md
    if md then

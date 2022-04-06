@@ -652,9 +652,8 @@ It's time to add it back, and this time have it do what it's meant to,
 
 
 #!lua
-local function ignore(file)
-   return file:extension() == 'orb'
-       or file:basename():sub(1,1) == '.'
+local function should_process(file)
+   return file:extension() == '.orb'
 end
 
 local function case(lume, dir, dupes)
@@ -676,7 +675,7 @@ local function case(lume, dir, dupes)
    local files = dir:getfiles()
    s:verb("  " .. "# files: " .. #files)
    for i, file in ipairs(files) do
-      if not ignore(file) then
+      if should_process(file) then
          lume.shuttle:push(file)
       end
    end
@@ -723,14 +722,6 @@ local function _findSubdirs(lume, dir)
                s:verb("doc/md: " .. tostring(subsub))
                docMdDir = subsub
                lume.docMd = subsub
-            elseif subname == "dot" then
-               s:verb("doc/dot: " .. tostring(subsub))
-               docDotDir = subsub
-               lume.docDot = subsub
-            elseif subname == "svg" then
-               s:verb("doc/svg: " .. tostring(subsub))
-               docSvgDir = subsub
-               lume.docSvg = subsub
             end
          end
       end
