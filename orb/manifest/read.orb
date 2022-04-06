@@ -18,10 +18,8 @@ local function read(path)
    if mani_file:exists() then
       s:verb("Found manifest.orb at %s", tostring(mani_file))
       manifest.file_exists = true
-      -- this is 800 pounds of gorilla we're bringing for one banana
-      local lume = require "orb:lume/lume" (uv.cwd(), nil, true)
       local skein = Skein(mani_file):tailor()
-      manifest(skein, lume)
+      manifest(skein)
    else
       s:verb("Didn't find a manifest.orb at %s", tostring(mani_file))
    end
