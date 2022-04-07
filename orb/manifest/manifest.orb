@@ -81,6 +81,29 @@ local Toml = require "lon:loml"
 local Manifest = meta {}
 #/lua
 
+** Next Steps
+
+We need to do an about-face on an obvious limitation before we're painted into
+it.
+
+I refer to the fact that we index directly on the Manifest to retrieve
+information.  That's blocking us from having any methods, and that's not
+going to help.   Manifests interact with documents in almost arbitrarily
+complex ways and right now we can just shove things in and get things out.
+
+
+**** Manifest:get(key)
+
+This lets us back out of storing data on the manifest directly, before it's
+too late.
+
+Don't make a field =get= in your manifest blocks for a little while, m'kay.
+
+#!lua
+function Manifest.get(manifest, key)
+   return manifest[key]
+end
+#/lua
 
 #!lua
 

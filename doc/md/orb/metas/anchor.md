@@ -128,6 +128,11 @@ local Ref = Twig :inherit "ref"
   Returns a string containing the URI resolved from the ref, using
 `skein.manifest`\.
 
+This is a huge mess, not helped by the fact that Refs themselves are
+practically folklore in how I've written them relative to what this rat's
+nest is doing\.
+
+
 ```lua
 local ext_refs = { md = "markdown_dir",
                    html = "weave_dir" }
@@ -144,8 +149,13 @@ function Ref.resolveLink(ref, skein, extension)
    end
    extension = extension or ""
    -- manifest or suitable dummy
-   local manifest = skein.manifest or { ref = { domains = {} }}
-   local man_ref = manifest.ref or { domains = {} }
+   local man_ref;
+   local manifest = skein.manifest
+   if manifest then
+      man_ref = manifest:get 'ref' or { domains = {} }
+   else
+      man_ref = {domains = {}}
+   end
    local project  = skein.lume and skein.lume.project or ""
    s:bore("ref: %s", ts(ref:span()))
    local url = ""

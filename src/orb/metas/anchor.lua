@@ -130,6 +130,11 @@ local Ref = Twig :inherit "ref"
 
 
 
+
+
+
+
+
 local ext_refs = { md = "markdown_dir",
                    html = "weave_dir" }
 local ext_defaults = { markdown_dir = "doc/md/",
@@ -145,8 +150,13 @@ function Ref.resolveLink(ref, skein, extension)
    end
    extension = extension or ""
    -- manifest or suitable dummy
-   local manifest = skein.manifest or { ref = { domains = {} }}
-   local man_ref = manifest.ref or { domains = {} }
+   local man_ref;
+   local manifest = skein.manifest
+   if manifest then
+      man_ref = manifest:get 'ref' or { domains = {} }
+   else
+      man_ref = {domains = {}}
+   end
    local project  = skein.lume and skein.lume.project or ""
    s:bore("ref: %s", ts(ref:span()))
    local url = ""

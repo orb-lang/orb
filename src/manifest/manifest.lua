@@ -84,6 +84,29 @@ local Manifest = meta {}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function Manifest.get(manifest, key)
+   return manifest[key]
+end
+
+
+
+
 local function _addTable(manifest, tab)
    for k,v in pairs(tab) do
       s:verb("adding %s : %s", k, v)
