@@ -63,7 +63,7 @@ we're inside project\-module\-file\.
 
 There's no need to elide the domain, a la `@/project:file`, which is
 \(currently\) not a valid ref\.  If one isn't provided, the resolved URL will be
-based on the `default_domain` field in the [manifest](NO default.domain IN MANIFESTbr-guide/MISSING_POST_PROJECTdoc/md/orb.md#manifests)\.
+based on the `default_domain` field in the [manifest](https://gitlab.com/special-circumstance/br-guide/-/blob/trunk/doc/md/orb.md#manifests)\.
 
 Note that `.orb` is not needed and should be elided, although we'll make the
 parser smart enough to accept it\.  Orb documents take on several extensions

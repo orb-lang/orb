@@ -36,7 +36,7 @@ local database = {}
 
 ### CREATE
 
-We create the modules database [in pylon](no manifest domain for brpylon/MISSING_POST_PROJECTdoc/md/modules.md)\.
+We create the modules database [in pylon](https://gitlab.com/special-circumstance/pylon/-/blob/trunk/doc/md/modules.md)\.
 
 
 ### project

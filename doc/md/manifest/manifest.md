@@ -3,21 +3,33 @@
 
   Manifests are how we configure Orb documents\.
 
-In essence they are simply [TOML](no manifest domain for brlon/MISSING_POST_PROJECTdoc/md/lon/loml.md) code blocks, which can be
+In essence they are simply [TOML](https://gitlab.com/special-circumstance/lon/-/blob/trunk/doc/md/lon/loml.md) code blocks, which can be
 found within a specific file, or more usually in a top\-level Orb document
 called `manifest.orb`\.
 
 Presumably we'll have a global manifest in `$BRIDGE_HOME` as well\.
 
-Other than that I have basically no idea what this is actually going to look
-like\.  Any code block with `#!toml #manifest` in it will end up in the
-appropriate Manifest, and access is of course through the skein\.
+A given manifest takes several kinds of input, looking for TOML blocks tagged
+`#manifest`, and accumulates data from them on the `.data` field\.
+
+A Manifest should be treated as immutable\. A new Manifest can be made with
+`:child`, and will inherit a clone of the parent data, rather than choosing
+to recursively prototype\-link multiple tables and pay the cost of allowing
+mutation of a parent Manifest's data to be reflected in child Manifests\.
+
+The sensible use of Manifest is to make one for global settings, one for
+per\-project settings, and at least in Orb, one if a document has a manifest
+block within it\.  Used in this fashion, complex inheritance would be
+counterproductive\.
 
 
-### Fields
+### Fields \#Move
 
   This will be a list of all key/value pairs and subtables recognized by the
 manifest format\.
+
+It really belongs somewhere else, Manifests will vary on the basis of
+application, and Orb\-specific fields should be documented in a guide, not here\.
 
 
 -  weave:  A table for weave\-specific configuration\.
@@ -43,30 +55,18 @@ manifest format\.
     Or maybe the bridge\-specific stuff goes in a `bridge` table\.  TBD\.
 
 
-## Implementation
+## Use
 
-  The Manifest itself is just a container: you feed it data, and it represents
-that data as Lua tables\.
-
-TOML codeblocks, like any codeblock, just have a `code_body` Node, which isn't
-normally parsed within it\.
-
-We want to be able to read from a Manifest without blocking any potential
-fields \(I think?\) so we'll use `__call` to do the two things a Manifest is
-expected to do: `manifest(codeblock)` will add the TOML to the existing
-Manifest, and `manifest(true)` will return a new Manifest inheriting from the
-old one\.
-
-We use the latter for e\.g\. encountering a `#manifest` block inside a file, or
-if we have a global `manifest.orb`, we use it to create the `.manifest` field
-on the Lume\.  I'm not in love with this code signature, but at least at the
-moment I prefer it to having a mixture of methods and plain\-old\-data\.
+Manifests may be fed a Skein or a Node using call syntax, anything else is
+warned against\.  It will do useful things if the Skein contains, or the Node
+is, a codeblock with the appropriate tag
 
 
 #### imports
 
 ```lua
 local meta = require "core:core/cluster" . Meta
+local core = require "qor:core"
 local s = require "status:status" ()
 s.verbose = false
 s.boring = false
@@ -83,39 +83,45 @@ local Toml = require "lon:loml"
 local Manifest = meta {}
 ```
 
-## Next Steps
-
-We need to do an about\-face on an obvious limitation before we're painted into
-it\.
-
-I refer to the fact that we index directly on the Manifest to retrieve
-information\.  That's blocking us from having any methods, and that's not
-going to help\.   Manifests interact with documents in almost arbitrarily
-complex ways and right now we can just shove things in and get things out\.
-
 
 #### Manifest:get\(key\)
 
-This lets us back out of storing data on the manifest directly, before it's
-too late\.
+Now that we've moved the data to `.data`, there's little advantage in using
+this approach, especially since data can be nested\.
 
-Don't make a field `get` in your manifest blocks for a little while, m'kay\.
 
 ```lua
 function Manifest.get(manifest, key)
-   return manifest[key]
+   return manifest.data[key]
 end
 ```
 
-```lua
 
-local function _addTable(manifest, tab)
+#### Manifest:getAll\(\)
+
+Returns a copy of all data in the manifest\.
+
+```lua
+local clone = assert(core.table.deepclone)
+
+function Manifest.getAll(manifest)
+   return deepclone(manifest.data)
+end
+```
+
+Now that we've done this, we need to move the data somewhere\.
+
+How about the `.data` slot, with index inheritance? Makes sense I think\.
+
+
+```lua
+local function _addTable(data, tab)
    for k,v in pairs(tab) do
       s:verb("adding %s : %s", k, v)
-      if type(v) == 'table' and manifest[k] ~= nil then
-         _addTable(manifest[k], v)
+      if type(v) == 'table' and data[k] ~= nil then
+         _addTable(data[k], v)
       else
-         manifest[k] = v
+         data[k] = v
       end
    end
 end
@@ -141,7 +147,7 @@ local function _addNode(manifest, block)
    if toml then
       s:verb("adding contents of manifest codebody")
       local contents = toml:toTable()
-      _addTable(manifest, contents)
+      _addTable(manifest.data, contents)
    else
        s:warn("no contents generated from #manifest block, line %d",
               block:linePos())
@@ -174,8 +180,9 @@ end
 
 ```lua
 function Manifest.child(manifest)
-   return setmetatable({}, { __index = getmetatable(manifest),
-                             __call  = Manifest.__call })
+   local child = meta(Manifest)
+   child.data = clone(manifest.data)
+   return child
 end
 ```
 
@@ -205,10 +212,10 @@ Manifest.__call = _call
 ```
 
 
-
 ```lua
 local function new(block)
    local manifest = meta(Manifest)
+   manifest.data = {}
    if block then
       _call(manifest, block)
    end

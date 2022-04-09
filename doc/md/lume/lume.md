@@ -206,7 +206,7 @@ end
 
 #### Lume\.shuttle
 
-A [deque](no manifest domain for brdeque/MISSING_POST_PROJECTdoc/md/deque.md) on which files are placed, to be turned into
+A [deque](https://gitlab.com/special-circumstance/deque/-/blob/trunk/doc/md/deque.md) on which files are placed, to be turned into
 Skeins by the Net and wrapped in a coroutine for asynchronous processing\.
 
 
@@ -234,7 +234,7 @@ A map of database\-specific values\.
 
 - db:
 
-  - stmts:  The [database statements](NO default.domain IN MANIFESTorb/MISSING_POST_PROJECTdoc/md/compile/database.md) necessary to
+  - stmts:  The [database statements](https://gitlab.com/special-circumstance/orb/-/blob/trunk/doc/md/compile/database.md) necessary to
       commit a single module\.
 
   - ids:   The project, bundle, and version ids\.
@@ -737,7 +737,7 @@ end
 
 ### \_makeManifest\(lume\)
 
-Creates and returns a [Manifest](NO default.domain IN MANIFESTorb/MISSING_POST_PROJECTdoc/md/manifest/manifest.md)\.
+Creates and returns a [Manifest](https://gitlab.com/special-circumstance/orb/-/blob/trunk/doc/md/manifest/manifest.md)\.
 
 This checks for the file `manifest.orb` in the root directory of the project,
 and in `$ORB_HOME`\.  \(Ok that's a lie right now, it only checks in the `/orb`

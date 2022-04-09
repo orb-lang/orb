@@ -63,8 +63,8 @@
 
 
 
-
 local meta = require "core:core/cluster" . Meta
+local core = require "qor:core"
 local s = require "status:status" ()
 s.verbose = false
 s.boring = false
@@ -89,31 +89,37 @@ local Manifest = meta {}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 function Manifest.get(manifest, key)
-   return manifest[key]
+   return manifest.data[key]
 end
 
 
 
 
-local function _addTable(manifest, tab)
+
+
+
+
+local clone = assert(core.table.deepclone)
+
+function Manifest.getAll(manifest)
+   return deepclone(manifest.data)
+end
+
+
+
+
+
+
+
+
+local function _addTable(data, tab)
    for k,v in pairs(tab) do
       s:verb("adding %s : %s", k, v)
-      if type(v) == 'table' and manifest[k] ~= nil then
-         _addTable(manifest[k], v)
+      if type(v) == 'table' and data[k] ~= nil then
+         _addTable(data[k], v)
       else
-         manifest[k] = v
+         data[k] = v
       end
    end
 end
@@ -139,7 +145,7 @@ local function _addNode(manifest, block)
    if toml then
       s:verb("adding contents of manifest codebody")
       local contents = toml:toTable()
-      _addTable(manifest, contents)
+      _addTable(manifest.data, contents)
    else
        s:warn("no contents generated from #manifest block, line %d",
               block:linePos())
@@ -172,8 +178,9 @@ end
 
 
 function Manifest.child(manifest)
-   return setmetatable({}, { __index = getmetatable(manifest),
-                             __call  = Manifest.__call })
+   local child = meta(Manifest)
+   child.data = clone(manifest.data)
+   return child
 end
 
 
@@ -204,9 +211,9 @@ Manifest.__call = _call
 
 
 
-
 local function new(block)
    local manifest = meta(Manifest)
+   manifest.data = {}
    if block then
       _call(manifest, block)
    end
