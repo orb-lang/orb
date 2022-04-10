@@ -63,6 +63,28 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local meta = require "core:core/cluster" . Meta
 local core = require "qor:core"
 local s = require "status:status" ()
@@ -79,19 +101,6 @@ local Toml = require "lon:loml"
 
 
 local Manifest = meta {}
-
-
-
-
-
-
-
-
-
-
-function Manifest.get(manifest, key)
-   return manifest.data[key]
-end
 
 
 

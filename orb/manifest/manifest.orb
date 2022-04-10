@@ -53,6 +53,28 @@ application, and Orb-specific fields should be documented in a guide, not here.
          Or maybe the bridge-specific stuff goes in a =bridge= table.  TBD.
 
 
+** Manifest Molds
+
+> Them, crying: You can't keep pointing to things and calling them molds!
+> Me, pointing at the next random thing I write: mold
+
+Using manifests fluently requires more than just a dumb container for TOML
+data.  We'd like it to be difficult, or at least not easy, to write code which
+throws errors in response to configured input.
+
+We also need to document, for a given use of the manifest format, the sort of
+data which is expected, and what the program does in response.
+
+This is an excellent application for literate programming, and we can provide
+these affordances fairly well by letting the Manifest receive a mold.
+
+The result is that we can pass in a second table, which shows the expected
+shape of data.  If we define a table as existing, then we can index and
+retrieve it even if the TOML doesn't define it.  If we define a value as
+having a particular type, we can issue a warning if another type is
+encountered and/or throw an error.
+
+
 ** Use
 
 Manifests may be fed a Skein or a Node using call syntax, anything else is
@@ -79,19 +101,6 @@ local Toml = require "lon:loml"
 
 #!lua
 local Manifest = meta {}
-#/lua
-
-
-**** Manifest:get(key)
-
-Now that we've moved the data to =.data=, there's little advantage in using
-this approach, especially since data can be nested.
-
-
-#!lua
-function Manifest.get(manifest, key)
-   return manifest.data[key]
-end
 #/lua
 
 

@@ -152,7 +152,7 @@ function Ref.resolveLink(ref, skein, extension)
    local man_ref;
    local manifest = skein.manifest
    if manifest then
-      man_ref = manifest:get 'ref' or { domains = {} }
+      man_ref = manifest.data.ref or { domains = {} }
    else
       man_ref = {domains = {}}
    end
