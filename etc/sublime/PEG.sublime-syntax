@@ -11,6 +11,7 @@ variables:
   name: '[A-Za-z_](?:-?[A-Za-z0-9_\-])*'
   assignment: '(?<!>)=/?|←/?|<\-/?'
 
+
 contexts:
   main:
     - match: '(^\s*{{name}})\s*(?={{assignment}})'
@@ -18,7 +19,7 @@ contexts:
     - match: '(^\s*`{{name}}`)\s*(?={{assignment}})'
       scope: support.function.rule.hidden.peg
     - match: '\s*{{name}}'
-      scope: entite.name.rule.peg
+      scope: entity.name.rule.peg
     - match: '{{assignment}}'
       scope: keyword.operator.assignment.peg
 
@@ -66,16 +67,18 @@ contexts:
       scope: punctuation.bracket.square.begin.peg
     - match: '\s*\]\s*'
       scope: punctuation.bracket.square.end.peg
-    - match: '\s*\{\s*'
-      scope: punctuation.bracket.curly.begin.peg
-    - match: '\s*\}\s*'
-      scope: punctuation.bracket.curly.end.peg
+
+    - match: "({)"
+      captures:
+        1: punctuation.definition.set.begin.peg
+      push: set_context
 
     - match: "'"
       captures:
         0: punctuation.definition.string.begin.peg
       scope: string.quoted.single.peg
       push: string_quoted_single
+
     - match: '"'
       captures:
         0: punctuation.definition.string.begin.peg
@@ -85,15 +88,24 @@ contexts:
       captures:
         1: comment.line.semi-colon.peg
 
+  set_context:
+    - meta_scope: string.set.peg
+    - match: "(})"
+      captures:
+        1: punctuation.definition.set.end.peg
+      pop: true
+    - include: string
+
   error_call_start:
     - match: "'"
       captures:
-        0: punctuation.definition.string.begin.lua
+        0: punctuation.definition.string.begin.peg
       set: error_string_quoted_single
     - match: '"'
       captures:
-        0: punctuation.definition.string.begin.lua
+        0: punctuation.definition.string.begin.peg
       set: error_string_quoted_double
+
 
   string_quoted_single:
     - meta_scope: string.quoted.single.peg
@@ -115,7 +127,7 @@ contexts:
     - meta_scope: sublimelinter.mark.error
     - match: "'"
       captures:
-        0: punctuation.definition.string.end.lua
+        0: punctuation.definition.string.end.peg
       pop: true
     - include: string
 
@@ -123,14 +135,14 @@ contexts:
     - meta_scope: sublimelinter.mark.error
     - match: '"'
       captures:
-        0: punctuation.definition.string.end.lua
+        0: punctuation.definition.string.end.peg
       pop: true
     - include: string
 
   string:
     - match: '\\([abfnrtv\\"'']|\r?\n|\n\r?|\d\d?\d?)'
-      scope: constant.character.escape.lua
+      scope: constant.character.escape.peg
     - match: '\\[xX][0-9a-fA-F][0-9a-fA-F]'
-      scope: constant.character.escape.lua
+      scope: constant.character.escape.peg
     - match: '\\u\{[0-9a-fA-F]{,7}\}'
-      scope: constant.character.escape.lua
+      scope: constant.character.escape.peg

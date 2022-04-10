@@ -122,6 +122,35 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
+
+function Manifest.child(manifest)
+   local child = meta(Manifest)
+   child.data = clone(manifest.data)
+   return child
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local function _addTable(data, tab)
    for k,v in pairs(tab) do
       s:verb("adding %s : %s", k, v)
@@ -132,6 +161,10 @@ local function _addTable(data, tab)
       end
    end
 end
+
+
+
+
 
 local function _addNode(manifest, block)
    -- quick sanity check
@@ -163,6 +196,9 @@ end
 
 
 
+
+
+
 local function _addSkein(manifest, skein)
    -- check if the Skein has been loaded and spun (probably not)
    if (not skein.source.text) or (not skein.source.doc) then
@@ -182,14 +218,6 @@ local function _addSkein(manifest, skein)
    else
       s:verb("no manifest blocks found in %s" .. tostring(skein.source.file))
    end
-end
-
-
-
-function Manifest.child(manifest)
-   local child = meta(Manifest)
-   child.data = clone(manifest.data)
-   return child
 end
 
 
@@ -216,6 +244,12 @@ local function _call(manifest, msg)
 end
 
 Manifest.__call = _call
+
+
+
+
+
+
 
 
 

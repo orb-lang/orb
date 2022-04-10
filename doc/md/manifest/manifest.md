@@ -99,14 +99,14 @@ local Toml = require "lon:loml"
 ```
 
 
-### Manifest
+## Manifest
 
 ```lua
 local Manifest = meta {}
 ```
 
 
-#### Manifest:getAll\(\)
+### Manifest:getAll\(\) \-> data: table
 
 Returns a copy of all data in the manifest\.
 
@@ -118,10 +118,39 @@ function Manifest.getAll(manifest)
 end
 ```
 
-Now that we've done this, we need to move the data somewhere\.
 
-How about the `.data` slot, with index inheritance? Makes sense I think\.
+### Manifest:child\(\) \-> Manifest
 
+Creates a new Manifest with a clone of the existing data\.
+
+At some future point we'll want to track the provenance of data, and the
+way to do that involves recursive index\-inheritance on subtables, or just
+observing where everything comes from\.
+
+The first approach is going to be stronger because the shape of the data gets
+us to the provenance, so they can't skew\.
+
+For now, this is fine: children are created on a one\-file\-at\-most basis,
+meaning that parent data won't change after children are created\.
+
+```lua
+function Manifest.child(manifest)
+   local child = meta(Manifest)
+   child.data = clone(manifest.data)
+   return child
+end
+```
+
+
+### Manifest\(frag: Skein | Node\)
+
+Calling a Manifest expects to be passed either a Skein or Node\.
+
+The Manifest will either find matching TOML blocks or it won't, and should
+not misbehave in the face of either of these forms of input\.
+
+Any data which is found is added to the Manifest using a helper function,
+`_addTable`\.
 
 ```lua
 local function _addTable(data, tab)
@@ -134,7 +163,11 @@ local function _addTable(data, tab)
       end
    end
 end
+```
 
+We get these tables from within valid Nodes, which we examine here\.
+
+```lua
 local function _addNode(manifest, block)
    -- quick sanity check
    assert(block and block.isNode, "manifest() must receive a Node")
@@ -164,6 +197,9 @@ local function _addNode(manifest, block)
 end
 ```
 
+Given a Skein, the Manifests examines anything tagged `#manifest`, and if it's
+a codeblock, hands it over\.
+
 ```lua
 local function _addSkein(manifest, skein)
    -- check if the Skein has been loaded and spun (probably not)
@@ -184,14 +220,6 @@ local function _addSkein(manifest, skein)
    else
       s:verb("no manifest blocks found in %s" .. tostring(skein.source.file))
    end
-end
-```
-
-```lua
-function Manifest.child(manifest)
-   local child = meta(Manifest)
-   child.data = clone(manifest.data)
-   return child
 end
 ```
 
@@ -220,6 +248,12 @@ end
 Manifest.__call = _call
 ```
 
+
+### new\(block\) \-> Manifest
+
+The signature here will most likely change, because it's important/normal to
+provide a mold to the Manifest \(rather, it will be\) and being able to pass in
+the first piece of data on construction is merely convenient sometimes\.
 
 ```lua
 local function new(block)
