@@ -63,15 +63,20 @@ contexts:
       scope: punctuation.bracket.round.begin.peg
     - match: '\s*\)\s*'
       scope: punctuation.bracket.round.end.peg
-    - match: '\s*\[\s*'
-      scope: punctuation.bracket.square.begin.peg
-    - match: '\s*\]\s*'
-      scope: punctuation.bracket.square.end.peg
+   # - match: '\s*\[\s*'
+   #   scope: punctuation.bracket.square.begin.peg
+   # - match: '\s*\]\s*'
+   #   scope: punctuation.bracket.square.end.peg
 
-    - match: "({)"
+    - match: "{"
       captures:
-        1: punctuation.definition.set.begin.peg
+        0: punctuation.definition.set.begin.peg
       push: set_context
+
+    - match: "\\["
+      captures:
+        0: punctuation.definition.range.begin.peg
+      push: range_left_context
 
     - match: "'"
       captures:
@@ -89,12 +94,30 @@ contexts:
         1: comment.line.semi-colon.peg
 
   set_context:
-    - meta_scope: string.set.peg
-    - match: "(})"
+    - meta_content_scope: string.set.peg
+    - match: "}"
       captures:
-        1: punctuation.definition.set.end.peg
+        0: punctuation.definition.set.end.peg
       pop: true
     - include: string
+
+  range_left_context:
+    - meta_content_scope: string.range.peg
+    - include: string
+    - match: "\\-"
+      captures:
+        0: punctuation.definition.range.separator.peg
+      pop: true
+      push: range_right_context
+
+  range_right_context:
+    - meta_content_scope: string.range.peg
+    - clear_scopes: true
+    - include: string
+    - match: "]"
+      captures:
+        0: punctuation.definition.range.end.peg
+      pop: true
 
   error_call_start:
     - match: "'"
