@@ -57,7 +57,8 @@ taken on the skein\.
 
 - source:  The artifacts of the source file:
 
-  - file:  The Path of the original document\.
+  - file:  The Path of the original document\.  This is the wrong name, it
+      should either **be** a File or be called `.path`\.
 
   - text:  String representing the contents of the document file\.
 
@@ -285,7 +286,12 @@ Produces sorcery, derived 'source code' in the more usual sense\.
 Referred to as a 'tangle' in the traditional literate coding style\.
 
 ```lua
+local orbScry;
+```
+
+```lua
 function Skein.knit(skein)
+   orbScry = orbScry or require "scry:orb-scry"
    if not skein.tag_acted then
       skein:tagAct()
    end
@@ -296,6 +302,8 @@ function Skein.knit(skein)
    -- this used to be a de-facto error but no longer is
    if not skein.knitted.lua then
       s:verb("no Lua document produced from %s", tostring(skein.source.file))
+   else
+      orbScry(skein)
    end
    return skein
 end

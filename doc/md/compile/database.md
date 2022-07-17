@@ -190,7 +190,7 @@ function database.project(conn, codex_info)
       conn:prepare(new_project):bindkv(codex_info):step()
       project_id = conn:prepare(get_project):bind(codex_info.name):step()
       if not project_id then
-         error ("failed to create project " .. codex.project)
+         error ("failed to create project " .. codex_info.project)
       else
          project_id = project_id[1]
       end

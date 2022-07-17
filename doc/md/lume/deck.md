@@ -20,6 +20,16 @@ Deck.__index = Deck
 local __Decks = setmetatable({}, { __mode = "kv" })
 ```
 
+## case\(deck\)
+
+Does nothing, just satisfying our brand\-new code checker :D
+
+```lua
+local function case(deck)
+   return
+end
+```
+
 
 ## new\(dir, lume\)
 

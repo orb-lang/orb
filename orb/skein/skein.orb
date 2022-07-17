@@ -279,7 +279,12 @@ Produces sorcery, derived 'source code' in the more usual sense.
 Referred to as a 'tangle' in the traditional literate coding style.
 
 #!lua
+local orbScry;
+#/lua
+
+#!lua
 function Skein.knit(skein)
+   orbScry = orbScry or require "scry:orb-scry"
    if not skein.tag_acted then
       skein:tagAct()
    end
@@ -290,6 +295,8 @@ function Skein.knit(skein)
    -- this used to be a de-facto error but no longer is
    if not skein.knitted.lua then
       s:verb("no Lua document produced from %s", tostring(skein.source.file))
+   else
+      orbScry(skein)
    end
    return skein
 end

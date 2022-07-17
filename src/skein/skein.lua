@@ -107,6 +107,7 @@
 
 
 
+
 local s = require "status:status" ()
 local a = require "anterm:anterm"
 s.chatty = true
@@ -278,7 +279,12 @@ end
 
 
 
+local orbScry;
+
+
+
 function Skein.knit(skein)
+   orbScry = orbScry or require "scry:orb-scry"
    if not skein.tag_acted then
       skein:tagAct()
    end
@@ -289,6 +295,8 @@ function Skein.knit(skein)
    -- this used to be a de-facto error but no longer is
    if not skein.knitted.lua then
       s:verb("no Lua document produced from %s", tostring(skein.source.file))
+   else
+      orbScry(skein)
    end
    return skein
 end

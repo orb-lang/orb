@@ -112,7 +112,7 @@ local Manifest = meta {}
 local clone = assert(core.table.deepclone)
 
 function Manifest.getAll(manifest)
-   return deepclone(manifest.data)
+   return clone(manifest.data)
 end
 
 

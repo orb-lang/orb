@@ -24,6 +24,16 @@ local __Decks = setmetatable({}, { __mode = "kv" })
 
 
 
+
+local function case(deck)
+   return
+end
+
+
+
+
+
+
 local function new(dir, lume)
    if type(dir) == "string" then
       dir = Dir(dir)
