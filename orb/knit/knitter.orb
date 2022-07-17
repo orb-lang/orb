@@ -1,0 +1,146 @@
+* Knitter
+
+
+  The base genus for language-specific Orb knitters.
+
+
+**** imports
+
+#!lua
+local core = require "qor:core"
+local cluster = require "cluster:cluster"
+#/lua
+
+
+** Knitter
+
+#!lua
+local new, Knitter, Knit_M = cluster.genus()
+#/lua
+
+
+** fields
+
+Knitters must be scalable, and pluggable, so we don't try them unless one of
+two conditions is met.
+
+The first is if we see the =code_type=:
+
+
+*** code_type: string
+
+  A Knitter must have a =code_type=, which is a string.
+
+These are currently always lowercase, and are treated as case sensitive.
+
+This corresponds exactly to the =code-type= rule in the Grammar.
+
+#!lua
+Knitter.code_type = nil
+#/lua
+
+
+*** tags: #{string}
+
+These are the tags a given knitter might take action on.
+
+We remove the hash from tags, so do likewise: ="example"= not ="#example"=.
+
+Another bespoke type annotation! Use =core.set=.
+
+#!lua
+Knitter.tags = {}
+#/lua
+
+This might be a good genus to apply a cluster =mold= once I get around to
+writing them.
+
+Knitters might turn out to be a =clade=, although I'd need to work out a
+method of runtime extension because we want knitters to be user extensible
+packages.
+
+
+*** :customScroll
+
+We set this to =false=, make it a function to generate a custom scroll.
+
+
+** builder
+
+#!lua
+cluster.construct(new, function(_new, knitter, code_type)
+   assert(type(code_type) == 'string', "#1 must be a string")
+   knitter.code_type = code_type
+   return knitter
+end)
+#/lua
+
+
+** Methods
+
+This is streamlined down to a predicate to decide if we're going to knit a
+codeblock, and a knitter.
+
+The method =:examine= is called on any codeblock which either matches the
+code type, or is tagged with one of the tags.  We use a boolean flag as a
+second value, so that =:examine= needn't re-derive which reason it has been
+called: if =from_tag= is set, then the Knitter was invoked because of a tag.
+
+
+*** Knitter:examine(skein, codeblock, from_tag) -> boolean
+
+A predicate, returning =true= if the codeblock is to be knit.
+
+We pass the skein first because this is, practically speaking, a method call
+against both the knitter and the skein.
+
+The default answer is =false=:
+
+#!lua
+Knitter.examine = assert(cluster.ur.no)
+#/lua
+
+
+*** Knitter:knit(skein, codeblock, scroll)
+
+This might not be the right interface, but it's the one we're using right now.
+
+It precludes more than one artifact per code type, which is probably invalid.
+
+Near-term spoiler alert, scroll will be something which can either be a single
+scroll or a scroll wrangler.
+
+We have a sensible base implementation of a knitter, which merely pads the
+scroll with enough lines to align sorcery and source, and inserts the lines
+into the scroll.
+
+Scroll has exhibited the kind of subtle bugs where I honestly wonder if the
+JIT is corrupting things without noticing, since the Heisenbug is a case of
+corrupting a trace record and noticing. Or just sefaulting it does that as
+well sometimes.
+
+It has some sessions but it could well use more.
+
+Here I go, using the Orb file as my livejournal again.
+
+Shoganai.
+
+#!lua
+function Knitter.knit(knitter, skein, codeblock, scroll)
+   local codebody = codeblock :select "code_body" ()
+   local line_start, _ , line_end, _ = codebody:linePos()
+   for i = scroll.line_count, line_start - 1 do
+      scroll:add "\n"
+   end
+   scroll:add(codebody)
+   -- add an extra line and skip 2, to get a newline at EOF
+   scroll:add "\n"
+   scroll.line_count = line_end + 2
+end
+#/lua
+
+#!lua
+return new
+#/lua
+
+

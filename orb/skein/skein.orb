@@ -54,7 +54,8 @@ taken on the skein.
 
 - source:  The artifacts of the source file:
 
-  - file:  The Path of the original document.
+  - file:  The Path of the original document.  This is the wrong name, it
+           should either *be* a File or be called =.path=.
 
   - text:  String representing the contents of the document file.
 
