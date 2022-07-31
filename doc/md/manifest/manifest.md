@@ -1,273 +1,275 @@
-# Manifest
-
-
-  Manifests are how we configure Orb documents\.
-
-In essence they are simply [TOML](https://gitlab.com/special-circumstance/lon/-/blob/trunk/doc/md/lon/loml.md) code blocks, which can be
-found within a specific file, or more usually in a top\-level Orb document
-called `manifest.orb`\.
-
-Presumably we'll have a global manifest in `$BRIDGE_HOME` as well\.
-
-A given manifest takes several kinds of input, looking for TOML blocks tagged
-`#manifest`, and accumulates data from them on the `.data` field\.
-
-A Manifest should be treated as immutable\. A new Manifest can be made with
-`:child`, and will inherit a clone of the parent data, rather than choosing
-to recursively prototype\-link multiple tables and pay the cost of allowing
-mutation of a parent Manifest's data to be reflected in child Manifests\.
-
-The sensible use of Manifest is to make one for global settings, one for
-per\-project settings, and at least in Orb, one if a document has a manifest
-block within it\.  Used in this fashion, complex inheritance would be
-counterproductive\.
-
-
-### Fields \#Move
-
-  This will be a list of all key/value pairs and subtables recognized by the
-manifest format\.
-
-It really belongs somewhere else, Manifests will vary on the basis of
-application, and Orb\-specific fields should be documented in a guide, not here\.
-
-
--  weave:  A table for weave\-specific configuration\.
-
-   - module\_url:  The base for [refs](httk://) within the module itself\.
-
-   - project\_url:  The project base url\.
-
-       We'll need to do a bit of magic to make this work, because
-       the Git\(Hub|Lab\) style of constructing URLs isn't as simple
-       as project\_url \+ module\_name \+ rest\_of\_the\_ref\.
-
-       So the weave table will have some way to construct the
-       intermediate information, with a "sensible" default: for a
-       markdown weave on Gitlab, `/-/blob/trunk/doc/md/`\.
-
-
-- knit:  A table for knit\-specific configuration\.
-
-    This will ultimately include versioning for various dependencies,
-    which is a complex system with several unfilled prerequisites\.
-
-    Or maybe the bridge\-specific stuff goes in a `bridge` table\.  TBD\.
-
-
-## Manifest Molds
-
-> Them, crying: You can't keep pointing to things and calling them molds\!
-> Me, pointing at the next random thing I write: mold
-
-Using manifests fluently requires more than just a dumb container for TOML
-data\.  We'd like it to be difficult, or at least not easy, to write code which
-throws errors in response to configured input\.
-
-We also need to document, for a given use of the manifest format, the sort of
-data which is expected, and what the program does in response\.
-
-This is an excellent application for literate programming, and we can provide
-these affordances fairly well by letting the Manifest receive a mold\.
-
-The result is that we can pass in a second table, which shows the expected
-shape of data\.  If we define a table as existing, then we can index and
-retrieve it even if the TOML doesn't define it\.  If we define a value as
-having a particular type, we can issue a warning if another type is
-encountered and/or throw an error\.
-
-
-## Use
-
-Manifests may be fed a Skein or a Node using call syntax, anything else is
-warned against\.  It will do useful things if the Skein contains, or the Node
-is, a codeblock with the appropriate tag
-
-
-#### imports
-
-```lua
-local meta = require "core:core/cluster" . Meta
-local core = require "qor:core"
-local s = require "status:status" ()
-s.verbose = false
-s.boring = false
-
-local Skein = require "orb:skein/skein"
-
-local Toml = require "lon:loml"
-```
-
-
-## Manifest
-
-```lua
-local Manifest = meta {}
-```
-
-
-### Manifest:getAll\(\) \-> data: table
-
-Returns a copy of all data in the manifest\.
-
-```lua
-local clone = assert(core.table.deepclone)
-
-function Manifest.getAll(manifest)
-   return clone(manifest.data)
-end
-```
-
-
-### Manifest:child\(\) \-> Manifest
-
-Creates a new Manifest with a clone of the existing data\.
-
-At some future point we'll want to track the provenance of data, and the
-way to do that involves recursive index\-inheritance on subtables, or just
-observing where everything comes from\.
-
-The first approach is going to be stronger because the shape of the data gets
-us to the provenance, so they can't skew\.
-
-For now, this is fine: children are created on a one\-file\-at\-most basis,
-meaning that parent data won't change after children are created\.
-
-```lua
-function Manifest.child(manifest)
-   local child = meta(Manifest)
-   child.data = clone(manifest.data)
-   return child
-end
-```
-
-
-### Manifest\(frag: Skein | Node\)
-
-Calling a Manifest expects to be passed either a Skein or Node\.
-
-The Manifest will either find matching TOML blocks or it won't, and should
-not misbehave in the face of either of these forms of input\.
-
-Any data which is found is added to the Manifest using a helper function,
-`_addTable`\.
-
-```lua
-local function _addTable(data, tab)
-   for k,v in pairs(tab) do
-      s:verb("adding %s : %s", k, v)
-      if type(v) == 'table' and data[k] ~= nil then
-         _addTable(data[k], v)
-      else
-         data[k] = v
-      end
-   end
-end
-```
-
-We get these tables from within valid Nodes, which we examine here\.
-
-```lua
-local function _addNode(manifest, block)
-   -- quick sanity check
-   assert(block and block.isNode, "manifest() must receive a Node")
-   -- codeblocks are all we know (for now)
-   if not (block.id == 'codeblock')then
-      s:verb("found a %s node tagged with #manifest, no action", block.id)
-      return
-   end
-   -- toml is all we speak (for now)
-   local code_type = block :select 'code_type' () :span()
-   if code_type ~= 'toml' then
-      s:chat("don't know what to do with a %s codeblock tagged with #manifest",
-             code_type)
-      return
-   end
-
-   local codebody = block :select 'code_body' () :span()
-   local toml = Toml(codebody)
-   if toml then
-      s:verb("adding contents of manifest codebody")
-      local contents = toml:toTable()
-      _addTable(manifest.data, contents)
-   else
-       s:warn("no contents generated from #manifest block, line %d",
-              block:linePos())
-   end
-end
-```
-
-Given a Skein, the Manifests examines anything tagged `#manifest`, and if it's
-a codeblock, hands it over\.
-
-```lua
-local function _addSkein(manifest, skein)
-   -- check if the Skein has been loaded and spun (probably not)
-   if (not skein.source.text) or (not skein.source.doc) then
-      skein:load():spin():tag()
-   end
-   local nodes = skein.tags.manifest
-   if nodes then
-      for _, block in ipairs(nodes) do
-         if block.id == 'codeblock' then
-            s:verb "adding codeblock from Skein"
-            _addNode(manifest, block)
-         else
-            s:verb("don't know what to do with a %s tagged "
-                   .. "with #manifest", block.id)
-         end
-      end
-   else
-      s:verb("no manifest blocks found in %s" .. tostring(skein.source.file))
-   end
-end
-```
-
-
-```lua
-local function _call(manifest, msg)
-   s:bore "entering manifest()"
-   if not type(msg) == 'table' then
-      s:warn("oopsie in manifest of type %s", type(msg))
-      return
-   end
-   --assert(type(msg)  == 'table', "argument to manifest must be a table")
-   -- otherwise this should be a codeblock or a Skein
-   if msg.idEst and msg.idEst == Skein then
-      s:bore("manifest was given a skein")
-      _addSkein(manifest, msg)
-   elseif msg.isNode then
-      s:bore("manifest was given a node")
-      _addNode(manifest, msg)
-   else
-      s:warn("manifest given something weird, type %s", type(msg))
-   end
-   s:bore "leaving manifest()"
-end
-
-Manifest.__call = _call
-```
-
-
-### new\(block\) \-> Manifest
-
-The signature here will most likely change, because it's important/normal to
-provide a mold to the Manifest \(rather, it will be\) and being able to pass in
-the first piece of data on construction is merely convenient sometimes\.
-
-```lua
-local function new(block)
-   local manifest = meta(Manifest)
-   manifest.data = {}
-   if block then
-      _call(manifest, block)
-   end
-   return manifest
-end
-
-Manifest.idEst = new
-```
-
-```lua
-return new
-```
+\-\-\* Manifest
+\-\-
+\-\-
+\-\-  Manifests are how we configure Orb documents\.
+\-\-
+\-\-In essence they are simply [TOML](https://gitlab.com/special-circumstance/lon/-/blob/trunk/doc/md/lon/loml.md) code blocks, which can be
+\-\-found within a specific file, or more usually in a top\-level Orb document
+\-\-called `manifest.orb`\.
+\-\-
+\-\-Presumably we'll have a global manifest in `$BRIDGE_HOME` as well\.
+\-\-
+\-\-A given manifest takes several kinds of input, looking for TOML blocks tagged
+\-\-=\#manifest=, and accumulates data from them on the `.data` field\.
+\-\-
+\-\-A Manifest should be treated as immutable\. A new Manifest can be made with
+\-\-=:child=, and will inherit a clone of the parent data, rather than choosing
+\-\-to recursively prototype\-link multiple tables and pay the cost of allowing
+\-\-mutation of a parent Manifest's data to be reflected in child Manifests\.
+\-\-
+\-\-The sensible use of Manifest is to make one for global settings, one for
+\-\-per\-project settings, and at least in Orb, one if a document has a manifest
+\-\-block within it\.  Used in this fashion, complex inheritance would be
+\-\-counterproductive\.
+\-\-
+\-\-
+\-\-\*\*\* Fields \#Move
+\-\-
+\-\-  This will be a list of all key/value pairs and subtables recognized by the
+\-\-manifest format\.
+\-\-
+\-\-It really belongs somewhere else, Manifests will vary on the basis of
+\-\-application, and Orb\-specific fields should be documented in a guide, not here\.
+\-\-
+\-\-\-  weave:  A table for weave\-specific configuration\.
+\-\-
+\-\-   \- module\_url:  The base for [refs](httk://) within the module itself\.
+\-\-
+\-\-   \- project\_url:  The project base url\.
+\-\-
+\-\-                   We'll need to do a bit of magic to make this work, because
+\-\-                   the Git\(Hub|Lab\) style of constructing URLs isn't as simple
+\-\-                   as project\_url \+ module\_name \+ rest\_of\_the\_ref\.
+\-\-
+\-\-                   So the weave table will have some way to construct the
+\-\-                   intermediate information, with a "sensible" default: for a
+\-\-                   markdown weave on Gitlab, `/-/blob/trunk/doc/md/`\.
+\-\-
+\-\-\- knit:  A table for knit\-specific configuration\.
+\-\-
+\-\-         This will ultimately include versioning for various dependencies,
+\-\-         which is a complex system with several unfilled prerequisites\.
+\-\-
+\-\-         Or maybe the bridge\-specific stuff goes in a `bridge` table\.  TBD\.
+\-\-
+\-\-
+\-\-\*\* Manifest Molds
+\-\-
+\-\-> Them, crying: You can't keep pointing to things and calling them molds\!
+\-\-> Me, pointing at the next random thing I write: mold
+\-\-
+\-\-Using manifests fluently requires more than just a dumb container for TOML
+\-\-data\.  We'd like it to be difficult, or at least not easy, to write code which
+\-\-throws errors in response to configured input\.
+\-\-
+\-\-We also need to document, for a given use of the manifest format, the sort of
+\-\-data which is expected, and what the program does in response\.
+\-\-
+\-\-This is an excellent application for literate programming, and we can provide
+\-\-these affordances fairly well by letting the Manifest receive a mold\.
+\-\-
+\-\-The result is that we can pass in a second table, which shows the expected
+\-\-shape of data\.  If we define a table as existing, then we can index and
+\-\-retrieve it even if the TOML doesn't define it\.  If we define a value as
+\-\-having a particular type, we can issue a warning if another type is
+\-\-encountered and/or throw an error\.
+\-\-
+\-\-
+\-\-\*\* Use
+\-\-
+\-\-Manifests may be fed a Skein or a Node using call syntax, anything else is
+\-\-warned against\.  It will do useful things if the Skein contains, or the Node
+\-\-is, a codeblock with the appropriate tag
+\-\-
+\-\-
+\-\-\*\*\*\* imports
+\-\-
+\-\-\#\!lua
+\-\-local meta ` require "core:core/cluster" . Meta
+--local core ` require "qor:core"
+\-\-local s ` require "status:status" () false
+\-\-s
+--s.verbose `\.boring ` false
+--
+--local Skein ` require "orb:skein/skein"
+\-\-
+\-\-local Toml ` require "lon:loml"
+--#/lua
+--
+--
+--** Manifest
+--
+--#!lua
+--local Manifest ` meta \{\}
+\-\-\#/lua
+\-\-
+\-\-
+\-\-\*\*\* Manifest:getAll\(\) \-> data: table
+\-\-
+\-\-Returns a copy of all data in the manifest\.
+\-\-
+\-\-\#\!lua
+\-\-local clone ` assert(core.table.deepclone)
+--
+--function Manifest.getAll(manifest)
+--   return clone(manifest.data)
+--end
+--#/lua
+--
+--
+--*** Manifest:child() -> Manifest
+--
+--Creates a new Manifest with a clone of the existing data.
+--
+--At some future point we'll want to track the provenance of data, and the
+--way to do that involves recursive index-inheritance on subtables, or just
+--observing where everything comes from.
+--
+--The first approach is going to be stronger because the shape of the data gets
+--us to the provenance, so they can't skew.
+--
+--For now, this is fine: children are created on a one-file-at-most basis,
+--meaning that parent data won't change after children are created.
+--
+--#!lua
+--function Manifest.child(manifest)
+--   local child ` meta\(Manifest\)
+\-\-   child\.data ` clone(manifest.data)
+--   return child
+--end
+--#/lua
+--
+--
+--*** Manifest(frag: Skein | Node)
+--
+--Calling a Manifest expects to be passed either a Skein or Node.
+--
+--The Manifest will either find matching TOML blocks or it won't, and should
+--not misbehave in the face of either of these forms of input.
+--
+--Any data which is found is added to the Manifest using a helper function,
+--`\_addTable=\.
+\-\-
+\-\-\#\!lua
+\-\-local function 
+addTable\(data, tab\)
+\-\-   for k,v in pairs\(tab\) do
+\-\-      s:verb\("adding %s : %s", k, v\)
+\-\-      if type\(v\) ` 'table' and data[k] ~= nil then
+--         _addTable(data[k], v)
+--      else
+--         data[k] = v
+--      end
+--   end
+--end
+--#/lua
+--
+--We get these tables from within valid Nodes, which we examine here.
+--
+--#!lua
+--local function _addNode(manifest, block)
+--   -- quick sanity check
+--   assert(block and block.isNode, "manifest() must receive a Node")
+--   -- codeblocks are all we know (for now)
+--   if not (block.id ` 'codeblock'\)then
+\-\-      s:verb\("found a %s node tagged with \#manifest, no action", block\.id\)
+\-\-      return
+\-\-   end
+\-\-   \-\- toml is all we speak \(for now\)
+\-\-   local code
+type ` block :select 'code_type' () :span()
+--   if code_type ~` 'toml' then
+\-\-      s:chat\("don't know what to do with a %s codeblock tagged with \#manifest",
+\-\-             code\_type\)
+\-\-      return
+\-\-   end
+\-\-
+\-\-   local codebody ` block :select 'code_body' () :span()
+--   local toml ` Toml\(codebody\)
+\-\-   if toml then
+\-\-      s:verb\("adding contents of manifest codebody"\)
+\-\-      local contents ` toml:toTable()
+--      _addTable(manifest.data, contents)
+--   else
+--       s:warn("no contents generated from #manifest block, line %d",
+--              block:linePos())
+--   end
+--end
+--#/lua
+--\#manifest`, and if it's
+--a codeblock, hands it over.
+--Given a Skein, the Manifests examines anything tagged `
+--
+--#!lua
+--local function _addSkein(manifest, skein)
+--   -- check if the Skein has been loaded and spun (probably not)
+--   if (not skein.source.text) or (not skein.source.doc) then
+--      skein:load():spin():tag()
+--   end
+--   local nodes ` skein\.tags\.manifest
+\-\-   if nodes then
+\-\-      for \_, block in ipairs\(nodes\) do
+\-\-         if block\.id ` 'codeblock' then
+--            s:verb "adding codeblock from Skein"
+--            _addNode(manifest, block)
+--         else
+--            s:verb("don't know what to do with a %s tagged "
+--                   .. "with #manifest", block.id)
+--         end
+--      end
+--   else
+--      s:verb("no manifest blocks found in %s" .. tostring(skein.source.file))
+--   end
+--end
+--#/lua
+--
+--
+--#!lua
+--local function _call(manifest, msg)
+--   s:bore "entering manifest()" 'table' then
+\-\-
+--   if not type(msg) `      s:warn\("oopsie in manifest of type %s", type\(msg\)\)
+\-\-      return
+\-\-   end
+\-\-   \-\-assert\(type\(msg\)  ` 'table', "argument to manifest must be a table")
+--   -- otherwise this should be a codeblock or a Skein Skein then
+\-\-
+--   if msg.idEst and msg.idEst `      s:bore\("manifest was given a skein"\)
+\-\-      \_addSkein\(manifest, msg\)
+\-\-   elseif msg\.isNode then
+\-\-      s:bore\("manifest was given a node"\)
+\-\-      
+addNode\(manifest, msg\)
+\-\-   else
+\-\-      s:warn\("manifest given something weird, type %s", type\(msg\)\)
+\-\-   end
+\-\-   s:bore "leaving manifest\(\)"
+\-\-end
+\-\-
+\-\-Manifest\.\_
+call ` _call
+--#/lua
+--
+--
+--*** new(block) -> Manifest
+--
+--The signature here will most likely change, because it's important/normal to
+--provide a mold to the Manifest (rather, it will be) and being able to pass in
+--the first piece of data on construction is merely convenient sometimes.
+--
+--#!lua
+--local function new(block) meta\(Manifest\)
+\-\-
+--   local manifest `   manifest\.data ` {}
+--   if block then
+--      _call(manifest, block)
+--   end
+--   return manifest
+--end
+-- new
+\-\-\#/lua
+--Manifest.idEst `
+\-\-
+\-\-\#\!lua
+\-\-return new
+\-\-\#/lua

@@ -169,10 +169,16 @@ us to employ the threadpool for parallelizing the syscall and read penalty.
 #!lua
 function Skein.load(skein)
    local file = assert(skein.source.file, "no file on skein")
+   -- fix the rest of green/autothread/etc and let this yield ffs
+   if file.fs2file then
+      -- suuuuper cheating
+   end
    local ok, text = pcall(file.read, file)
    if ok then
       skein.source.text = text
    else
+      skein.source.cant_load = true
+      skein.source.load_err = text
       s:complain("fail on load %s: %s", tostring(file), text)
    end
    return skein
@@ -283,8 +289,8 @@ local orbScry;
 #/lua
 
 #!lua
+local with_scry = require "bridge" . args . scry
 function Skein.knit(skein)
-   orbScry = orbScry or require "scry:orb-scry"
    if not skein.tag_acted then
       skein:tagAct()
    end
@@ -295,7 +301,8 @@ function Skein.knit(skein)
    -- this used to be a de-facto error but no longer is
    if not skein.knitted.lua then
       s:verb("no Lua document produced from %s", tostring(skein.source.file))
-   else
+   elseif with_scry then
+      orbScry = orbScry or require "scry:orb-scry"
       orbScry(skein)
    end
    return skein
@@ -648,9 +655,15 @@ local function new(path, lume)
    if not path then
       error "Skein must be constructed with a path"
    end
+
    local file;
+   local path_t = type(path)
+   if path_t == 'table' and path.fs2file then
+      -- we cheat
+      file = path
+      skein.an_fs2File = true
    -- handles: string, Path, or File objects
-   if type(path) == 'string' or path.idEst ~= File then
+   elseif path_t == 'string' or path.idEst ~= File then
       file = File(Path(path):absPath())
    else
       file = path

@@ -93,6 +93,8 @@ of common pattern.
 
 Making this general, eloquent, and extensible, will take a few iterations.
 
+#TODO an executed block should be an implicit noknit
+
 
 **** imports
 

@@ -42,3 +42,32 @@ It would impose a speed penalty on anything which walks a Node and uses the
 determine the visible part of the document and render it with color markup.
 But, there's no reason not to call that method with the string as an
 parameter, and again, we only have to cover the visible lines.
+
+
+** Digging In
+
+Rather than =first, last, str=, a =node= has =_O, stride, version=.
+
+As you might expect, the Node doesn't read =._O=, it reads =.o=, and this
+checks =version= against a single closure which replies =false= on no change
+and the latest version number on any change.
+
+The stride only changes when a token under the Node has mutated.  This
+invalidates all the offsets, but a token only has to know that when it needs
+to know the offset, which isn't that often.
+
+The root Node has omniscient knowledge of the version, consisting of the
+change in width, and the offset it's applied to.  Since mutation propagates
+to the root, all Nodes on that path have been re-strided, and none other
+require that.  It is simple to derive the live offset on demand.
+
+So when a Node sees a change of version, it asks the parent about the offset
+adjustment, which the parent has if it has seen that version, and so on up the
+chain.
+
+As an optimistic algorithm, one might notify sibling nodes of the one being
+re-offset, or perhaps the first parent.
+
+I'm almost ready to start trying it out on 'synthetic nodes' which is, yeah,
+a shim while I finish the bootstrap to get to the Qoph combinator.
+

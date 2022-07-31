@@ -47,6 +47,9 @@ document's structure, using [espalier's PEG parser](https://gitlab.com/special-c
 `first-section`  ←  (block-sep / line-end)? blocks / (block-sep / line-end)
 
         section  ←  header line-end blocks*
+                 ;  newline-escaped header?
+                 ;  " "* "*"+ " " ("\\\n   " / !"\n" 1)*
+                 ;  need to cover that case in the subgrammar
          header  ←  " "* "*"+ " " (!"\n" 1)*
                  /   " "* "*"+ &"\n"
 
