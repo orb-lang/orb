@@ -139,23 +139,25 @@ function Knit.knit(knitter, skein)
    for codeblock in doc :select 'codeblock' do
       local code_type = codeblock :select 'code_type'() :span()
       local tagset = skein:tagsFor(codeblock)
-      if tagset("noKnit") then
-         goto continue
-      end
-      -- special case asLua blocks, for now
-      if tagset("asLua") then
-         local scroll = skein:knitScroll(knitters.lua)
-         knitters.lua:knit(skein, codeblock, scroll)
-      end
-      local knitter = knitters[code_type]
-      if knitter then
-         s:bore("block of type %s", code_type)
-         if knitter:examine(skein, codeblock) then
-            local scroll = skein:knitScroll(knitter)
-            knitter:knit(skein, codeblock, scroll)
+      if not tagset("noKnit") then
+         -- special case asLua blocks, for now
+         if tagset("asLua") then
+            local scroll = skein:knitScroll(knitters.lua)
+            knitters.lua:knit(skein, codeblock, scroll)
+         end
+         --  #Todo knitters should be able to register tags to look for and the
+         --  whole knitter gets a method for examining this
+
+         -- handle #!language with knitters.language
+         local knitter = knitters[code_type]
+         if knitter then
+            s:bore("block of type %s", code_type)
+            if knitter:examine(skein, codeblock) then
+               local scroll = skein:knitScroll(knitter)
+               knitter:knit(skein, codeblock, scroll)
+            end
          end
       end
-      ::continue::
    end
    -- clean up unused scrolls
    for code_type, scroll in pairs(knitted) do

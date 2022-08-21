@@ -57,8 +57,8 @@ local C_knit = require "orb:knit/knitter" "c"
 
 ### C\_knit:examine\(skein, codeblock\)
 
-C code tagged `#asLua` should not be knit, although we may provide a way to
-override this so that both happen\.
+C code tagged `#asLua` should not be knit\.  In the event that we want to
+have it both ways, we'll use an additional tag here
 
 ```lua
 function C_knit.examine(c_knit, skein, codeblock)
