@@ -15,7 +15,7 @@ local cluster = require "cluster:cluster"
 
 
 
-local new, Knitter, Knit_M = cluster.genus()
+local new, Knitter, Knit_M = cluster.order()
 
 
 

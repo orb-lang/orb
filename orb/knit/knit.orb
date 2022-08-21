@@ -147,14 +147,12 @@ function Knit.knit(knitter, skein)
          local scroll = skein:knitScroll(knitters.lua)
          knitters.lua:knit(skein, codeblock, scroll)
       end
-      -- this takes over
-      for _type, knitter in pairs(knitters) do
-         if _type == code_type then
-            s:bore("block of type %s", _type)
-            if knitter:examine(skein, codeblock) then
-               local scroll = skein:knitScroll(knitter)
-               knitter:knit(skein, codeblock, scroll)
-            end
+      local knitter = knitters[code_type]
+      if knitter then
+         s:bore("block of type %s", code_type)
+         if knitter:examine(skein, codeblock) then
+            local scroll = skein:knitScroll(knitter)
+            knitter:knit(skein, codeblock, scroll)
          end
       end
       ::continue::

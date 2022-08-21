@@ -42,6 +42,19 @@ local fragments = require "orb:orb/fragments"
   A Parsing Expression Grammar, defining the main characteristics of an Orb
 document's structure, using [[espalier's PEG parser][@espalier:espalier/peg]].
 
+
+*** Notes
+
+This will benefit from a careful pass to make whitespace capture more
+consistent.
+
+As it is, the block-sep or line-end gets incoporated into the unit sometimes,
+where it should consistently capture as a peer.  Codeblocks, for example,
+have a line-end *in them* and shouldn't.
+
+I'm loathe to tamper with the heart of Orb until I can pin versions, speaking
+of which, let's make some progress on the Vav combinator.
+
 #!peg @Doc_str #asLua
             doc  ←  (first-section / section) section*
 `first-section`  ←  (block-sep / line-end)? blocks / (block-sep / line-end)

@@ -12,7 +12,7 @@ local Case = require "scroll:case"
 
 
 
-local PlantUML = require "orb:knit/knitter" "plantuml"
+local PlantUML = require "orb:knit/knitter" 'plantuml'
 
 
 
