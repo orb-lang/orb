@@ -6,20 +6,20 @@
 \-\- \#/lua
 \-\-
 \-\- \#\!lua
-\-\- local File ` require "fs:file"
--- local Manifest ` require "orb:manifest/manifest"
-\-\- local Skein ` require "orb:skein/skein"
--- #/lua
---
--- #!lua
--- local function read(path) Manifest\(\)
+
+\-\- local Manifest ` require "orb:manifest/manifest" require "orb:skein/skein"
 \-\-
---    local manifest `    local mani\_file ` File(path)
---    if mani_file:exists() then
---       s:verb("Found manifest.orb at %s", tostring(mani_file)) true
+-- local Skein ` \#/lua
 \-\-
---       manifest.file_exists `       local skein = Skein\(mani\_file\):tailor\(\)
-\-\-       manifest\(skein\)
+\-\- \#\!lua
+\-\- local function read\(path\)
+\-\-    local manifest ` Manifest() File\(path\)
+\-\-
+--    local mani_file `    if mani\_file:exists\(\) then
+\-\-       s:verb\("Found manifest\.orb at %s", tostring\(mani\_file\)\)
+\-\-       manifest\.file\_exists ` true Skein\(mani\_file\):tailor\(\)
+\-\-
+--       local skein `       manifest\(skein\)
 \-\-    else
 \-\-       s:verb\("Didn't find a manifest\.orb at %s", tostring\(mani\_file\)\)
 \-\-    end

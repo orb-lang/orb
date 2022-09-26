@@ -121,8 +121,8 @@ local compiler = require "orb:compile/compiler"
 local database = require "orb:compile/database"
 local Manifest; -- optional load which would otherwise be circular
 
-local File   = require "fs:fs/file"
-local Path   = require "fs:fs/path"
+local File   = require "fs:fs2/file"
+local Path   = require "fs:fs2/path"
 local Scroll = require "scroll:scroll"
 local Notary = require "status:annotate"
 
@@ -308,6 +308,27 @@ function Skein.knit(skein)
    end
    return skein
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

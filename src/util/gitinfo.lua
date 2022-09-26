@@ -9,7 +9,7 @@
 
 
 local sh = require "lash:lash"
-local Dir = require "fs:directory"
+local Dir = require "fs:fs2/directory"
 local lines = assert(require "core:core/string" . lines)
 local insert = assert(table.insert)
 

@@ -124,9 +124,9 @@ local Watcher  = require "orb:lume/watcher"
 local Manifest = require "orb:manifest/manifest"
 local database = require "orb:compile/database"
 
-local Dir   = require "fs:fs/directory"
-local File  = require "fs:fs/file"
-local Path  = require "fs:fs/path"
+local Dir   = require "fs:fs2/directory"
+local File  = require "fs:fs2/file"
+local Path  = require "fs:fs2/path"
 local Deque = require "deque:deque"
 local Set   = require "set:set"
 

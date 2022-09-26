@@ -145,8 +145,8 @@ function Knit.knit(knitter, skein)
             local scroll = skein:knitScroll(knitters.lua)
             knitters.lua:knit(skein, codeblock, scroll)
          end
-         --  #Todo knitters should be able to register tags to look for and the
-         --  whole knitter gets a method for examining this
+         --  #Todo:  Knitters should be able to register tags to look for and
+         --          the whole knitter gets a method for examining this
 
          -- handle #!language with knitters.language
          local knitter = knitters[code_type]

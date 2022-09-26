@@ -128,8 +128,8 @@ local compiler = require "orb:compile/compiler"
 local database = require "orb:compile/database"
 local Manifest; -- optional load which would otherwise be circular
 
-local File   = require "fs:fs/file"
-local Path   = require "fs:fs/path"
+local File   = require "fs:fs2/file"
+local Path   = require "fs:fs2/path"
 local Scroll = require "scroll:scroll"
 local Notary = require "status:annotate"
 ```
@@ -316,6 +316,27 @@ function Skein.knit(skein)
    return skein
 end
 ```
+
+
+### Skein:embroider\(\)
+
+There it is\!
+
+This is the compile\-time execution phase\.
+
+We'll start with moving scry here, and providing a proper decoration with the
+results of scrying, so we no longer push them out as we encounter them\.
+
+Although this comes after knitting, we'll probably find that the boundary is
+complex and may be crossed several times\.  Embroidery can also have
+consequences to the source document itself, which can in turn propagate to or
+*depend upon* other Orb documents which can be in any of a number of states\.
+
+So we'll need:
+
+
+### Skein:await\(something or other\)
+
 
 
 ### Skein:weave\(\)
