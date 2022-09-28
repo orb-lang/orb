@@ -653,28 +653,23 @@ end
 
 
 local function should_process(file)
-   return file:extension() == '.orb'
+   return file:ext() == '.orb'
 end
 
 local function case(lume, dir, dupes)
    dupes = dupes or {}
    s:verb("dir: %s", tostring(dir))
    dir = type(dir) == 'string' and assert(Dir(dir))
-                      or dir.idEst == Dir and dir
-                      or error "#2 must be a directory or path string"
+                      or dir
    assert(dir:exists(), "passed directory doesn't exist")
-   local ino = dir:attributes().ino
+   local ino = dir:stat().ino
    if dupes[ino] then return end
    dupes[ino] = true
    s:verb("casing %s", tostring(dir))
-   local subdirs = dir:getsubdirs()
-   s:verb("  " .. "# subdirs: " .. #subdirs)
-   for i, sub in ipairs(subdirs) do
+   for sub in dir:dirs() do
       case(lume, sub)
    end
-   local files = dir:getfiles()
-   s:verb("  " .. "# files: " .. #files)
-   for i, file in ipairs(files) do
+   for file in dir:files() do
       if should_process(file) then
          lume.shuttle:push(file)
       end
@@ -699,9 +694,8 @@ local function _findSubdirs(lume, dir)
    local orbDir, srcDir, libDir = nil, nil, nil
    local docDir, docMdDir, docDotDir, docSvgDir = nil, nil, nil, nil
    lume.root = dir
-   local subdirs = dir:getsubdirs()
 
-   for i, sub in ipairs(subdirs) do
+   for sub in dir:dirs() do
       local name = sub:basename()
       if name == "orb" then
          s:verb("orb: " .. tostring(sub))
@@ -709,14 +703,13 @@ local function _findSubdirs(lume, dir)
          lume.orb = sub
       elseif name == "src" then
          s:verb("src: " .. tostring(sub))
-         srcDir = Dir(sub)
+         srcDir = sub
          lume.src = sub
       elseif name == "doc" then
          s:verb("doc: " .. tostring(sub))
          docDir = sub
          lume.doc = sub
-         local subsubdirs = docDir:getsubdirs()
-         for j, subsub in ipairs(subsubdirs) do
+         for subsub in sub:dirs() do
             local subname = subsub:basename()
             if subname == "md" then
                s:verb("doc/md: " .. tostring(subsub))
