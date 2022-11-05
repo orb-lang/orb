@@ -1,28 +1,36 @@
 *** Drawers
 
+Drawers are matched by the number of colons on either side of the bracket.
+
+There will be further recognition possible in the lead and tail of a drawer,
+but this remains underspecified.
+
+Plausibly, the bottom will be used primarly for categories.
+
 :[a simple drawer]:
 
 -  with a list
   -  inside
   -  it
 
-:/[a simple drawer]:
+:[drawer closed]:
 
 :[another simple drawer]:
 writing
 
 
-:/[another simple drawer]:
+:[another simple drawer]:
 
-:[double drawer]:
+::[double drawer]::
 -  with a list
   -  inside
   -  it
+:[not a drawer]::
 
 and some text
-:/[double drawer]:
+::[double drawer]::
 
 ** A bare drawer
 
 :[]:
-:/[]:
+:[]:

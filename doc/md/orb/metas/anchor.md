@@ -36,53 +36,77 @@ easier to implement without this and add it later\.
 
 ### @ Refs
 
-Refs begin with an `@` sign, making them a sort of handle\.
+Refs begin with an `@` sign\.  This resembles handles both syntactically and
+semantically, however refs have their own grammar, there is no overlap between
+where refs and handles are found\.
 
 These always refer to a document or directory in an Orb project, or, a section
-within one\.
+within one\.  Note that `.orb` is not included in refs\.
 
 `@name` is an internal reference, with a name resolution policy which is TBD,
 but will be based on the GitHub schema for anchor reference resolution\.  If
-there's an explicitly named entity with that name, the link will resolve to it\.
+there's an explicitly named entity with that name, the link will resolve to
+it\.  This is a fragment with a leading `#` in the resulting URL\.
 
-`@:folder/file` refers to a module inside the same project\.  This is a
-reference to our `require` syntax, `"project:module"`, with the project
-elided\.  `@project:folder/file`, therefore, is a reference across projects,
-with the same fully\-qualified form as in `require`: the namespace is assumed
-to be the native namespace, unless provided, or overridden in the manifest\.
+Any other reference is out of the document, and can take a fragment with a
+`#`\.
+
+`@folder/file` refers to a module inside the same project\.  If there's no
+folder between the project root and the file, this must be spelled `@:file`,
+therefor `@:folder/file` is a legal synonym for the first form\.
+
+We also allow `@:folder/` by itself, but `@folder/` is not a synonym\.  It
+should refer to a domain, though I'm leaving that out for lack of a use for
+it\.  For now\.
+
+`@/project:folder/file`, and `@/project:file`, are references across projects
+within the base domain, which defaults to the same domain as the project
+incorporating the ref\.  For us, `br` or `bridge`\.
 
 It's valid to refer to just a project as well, as `@full.domain/project:` or
-`@project:` for the default domain\.  This will resolve to a link to the repo
-root, unless the weaver is otherwise directed by the manifest\.
+`@/project:` for the default domain\.  This will resolve to a link to the repo
+root, unless the weaver is otherwise directed by the manifest\.  While we
+could allow `@project:`, I find it confusing and don't see this as a good
+place for a synonym\.
 
-In a cross\-document reference, we use the familiar `#` form for an anchor
+In any cross\-document reference, we use the familiar `#` form for an anchor
 within a document `@fully.qualified/project:folder/file#fragment`\.  At
-present, we don't support queries in refs, but perhaps we should\.  I'm pretty
-sure that `@named-ref` is the same as `@project:module/file#named-ref`, if
-we're inside project\-module\-file\.
-
-There's no need to elide the domain, a la `@/project:file`, which is
-\(currently\) not a valid ref\.  If one isn't provided, the resolved URL will be
-based on the `default_domain` field in the [manifest](https://gitlab.com/special-circumstance/br-guide/-/blob/trunk/doc/md/orb.md#manifests)\.
-
-Note that `.orb` is not needed and should be elided, although we'll make the
-parser smart enough to accept it\.  Orb documents take on several extensions
-depending on where they end up\.
+present, we don't support queries in refs, but perhaps we should\.
+`@named-ref` is the same as `@project:folder/file#named-ref`, if we're inside
+project\-module\-file\.
 
 
 ```peg
-        ref  ←  pat ( domain net project col doc-path
-                    / project col doc-path
-                    / doc-path ) (hax fragment)*
 
-     domain  ←  (!"/" 1)+
-    project  ←  (!":" 1)*
-   doc-path  ←  (!"#" 1)*
-   fragment  ←  (!"]" 1)+
-        net  ←  "/"
-        pat  ←  "@"
-        col  ←  ":"
-        hax  ←  "#"
+           ref  ←  pat ref-form -1 ; / bad-ref
+
+    `ref-form`  ←  cross-ref / in-ref
+
+   `cross-ref`  ←  full-ref
+                /  doc-ref
+                /  project-ref
+
+        in-ref  ←  fragment
+
+      full-ref  ←  domain project-ref
+       doc-ref  ←  full-doc / short-doc
+   project-ref  ←  net project doc-ref?
+
+        domain  ←  name (dot name)*
+    `full-doc`  ←  col folder* file?
+   `short-doc`  ←  folder+ file
+       project  ←  name col
+        folder  ←  name net
+          file  ←  name frag?
+
+        `frag`  ←  hax fragment
+
+           net  ←  "/"
+           pat  ←  "@"
+           col  ←  ":"
+           hax  ←  "#"
+           dot  ←  "."
+
 ```
 
 

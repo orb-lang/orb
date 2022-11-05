@@ -42,9 +42,16 @@ local fragments = require "orb:orb/fragments"
   A Parsing Expression Grammar, defining the main characteristics of an Orb
 document's structure, using [[espalier's PEG parser][@espalier:espalier/peg]].
 
+#Todo  Whitespace adjustment.  We have a mix of line ends attaching to blocks
+       and as section peers, what we want is for all dividing whitespace to be
+       a peer.
+
+       Mostly this is replacing =line-end= with =&line-end=.
+
+
 #!peg @Doc_str #asLua
             doc  ←  (first-section / section) section*
-`first-section`  ←  (block-sep / line-end)? blocks / (block-sep / line-end)
+`first-section`  ←  line-end* blocks / line-end+
 
         section  ←  header line-end blocks*
          header  ←  " "* "*"+ " " (!"\n" 1)*
@@ -63,39 +70,44 @@ document's structure, using [[espalier's PEG parser][@espalier:espalier/peg]].
                  /  link-line
                  /  drawer
       block-sep  ←  "\n\n" "\n"*
-
+                 ;  code-start >> code-end
       codeblock  ←  code-start (!code-end 1)* code-end
    `code-start`  ←  "#" ("!"+)@codelevel code-type@code_c (!"\n" 1)* "\n"
      `code-end`  ←  "\n" "#" ("/"+)@(#codelevel) code-type@(code_c)
-                     (!"\n" 1)* line-end
+                     (!"\n" 1)* &line-end
                  /  -1
     `code-type`  ←  symbol?
 
      blockquote  ←  block-line+ line-end
    `block-line`  ←  " "* "> " (!"\n" 1)* (!"\n\n" "\n")?
 
-          table  ←  table-head table-line*
+          table  ←  table-head line-end (table-line line-end)*
    `table-head`  ←  (" "* handle_h* " "*)@table_c
-                    "|" (!"\n" 1)* line-end
-   `table-line`  ←  (" "*)@(#table_c) "|" (!line-end 1)* line-end
+                    "|" (!"\n" 1)* &line-end
+   `table-line`  ←  (" "*)@(#table_c) "|" (!line-end 1)* &line-end
 
            list  ←  (list-line / numlist-line)+
-      list-line  ←  ("- ")@list_c (!line-end 1)* line-end
+      list-line  ←  margin-l-line / indent-l-line
+   numlist-line  ←  margin-n-line / indent-n-line
+
+`margin-l-line`  ←  ("- ")@list_c (!line-end 1)* line-end
                     (!(" "* list-num)
                     (" "+)@(>list_c) !"- "
                     (!line-end 1)* line-end)*
-                 /  (" "+ "- ")@list_c (!line-end 1)* line-end
+`indent-l-line`  ←  (" "+ "- ")@list_c (!line-end 1)* line-end
                     (!(" "* list-num)
                     (" "+)@(>=list_c) !"- " (!line-end 1)* line-end)*
-   numlist-line  ←  list-num@numlist_c (!line-end 1)* line-end
+
+`margin-n-line`  ←  list-num@numlist_c (!line-end 1)* line-end
                     (!(" "* "- ")
                     (" "+)@(>numlist_c)
                     !list-num (!line-end 1)* line-end)*
-                 /  (" "+ list-num)@numlist_c (!line-end 1)* line-end
+`indent-n-line`  ←  (" "+ list-num)@numlist_c (!line-end 1)* line-end
                     (!(" "* "- ")
                     (" "+)@(>=numlist_c)
                     !list-num (!line-end 1)* line-end)*
-     `list-num`  ←  [0-9]+ ". "
+
+     `list-num`  ←  [0-9]+ ". " ; candidate: `/ ".. "`
 
     handle-line  ←  handle (!line-end 1)* line-end
 
@@ -115,16 +127,15 @@ document's structure, using [[espalier's PEG parser][@espalier:espalier/peg]].
            link  ←  (!line-end 1)*
 
          drawer  ←  drawer-top line-end
-                    ((structure "\n"* / (!drawer-bottom prose-line)+)+
-                    / &drawer-bottom)
+                    (!drawer-bottom block line-end*)*
                     drawer-bottom
                     ;; :[contents]:, ::[contents]::
-   `drawer-top`  ←  " "* (":")+@drawer_l "["
-                    (!"\n" !"]:" 1)*
-                    "]" (":")+@(drawer_l) &"\n"
-`drawer-bottom`  ←  " "* (":")+@(drawer_l) "["
-                    (!"\n" !"]:" 1)*@(drawer_c)
-                    "]" (":")+@(drawer_l) line-end
+   `drawer-top`  ←  " "* d_lead (!"\n" !d_tail 1)* d_tail &"\n"
+`drawer-bottom`  ←  " "* d_match (!"\n" !d_tail 1)* d_tail &"\n"
+
+       `d_lead`  ←  (":")+@drawer_l "["
+       `d_tail`  ←  "]" (":")+@(#drawer_l)
+       `d_match` ←  (":")+@(#drawer_l) "["
 
       paragraph  ←  (!header !structure par-line (!"\n\n" "\n")?)+
      `par-line`  ←  (!"\n" 1)+

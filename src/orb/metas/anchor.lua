@@ -71,19 +71,42 @@ s.verbose = false
 
 
 
-local ref_str = [[
-        ref  ←  pat ( domain net project col doc-path
-                    / project col doc-path
-                    / doc-path ) (hax fragment)*
 
-     domain  ←  (!"/" 1)+
-    project  ←  (!":" 1)*
-   doc-path  ←  (!"#" 1)*
-   fragment  ←  (!"]" 1)+
-        net  ←  "/"
-        pat  ←  "@"
-        col  ←  ":"
-        hax  ←  "#"
+
+
+
+
+local ref_str = [[
+
+           ref  ←  pat ref-form -1 ; / bad-ref
+
+    `ref-form`  ←  cross-ref / in-ref
+
+   `cross-ref`  ←  full-ref
+                /  doc-ref
+                /  project-ref
+
+        in-ref  ←  fragment
+
+      full-ref  ←  domain project-ref
+       doc-ref  ←  full-doc / short-doc
+   project-ref  ←  net project doc-ref?
+
+        domain  ←  name (dot name)*
+    `full-doc`  ←  col folder* file?
+   `short-doc`  ←  folder+ file
+       project  ←  name col
+        folder  ←  name net
+          file  ←  name frag?
+
+        `frag`  ←  hax fragment
+
+           net  ←  "/"
+           pat  ←  "@"
+           col  ←  ":"
+           hax  ←  "#"
+           dot  ←  "."
+
 ]]
 
 
