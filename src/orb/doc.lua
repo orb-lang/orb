@@ -222,6 +222,15 @@ Linkline.toMarkdown = Twig.nullstring
 
 
 
+local Clade, Node = use ("cluster:clade", "espalier:peg/node")
+
+
+
+local contract = {}
+
+local OrbClade = Clade(Node, contract):extend(contract)
+
+
 
 local DocMetas = { Twig,
                    header       = Header,

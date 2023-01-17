@@ -1,4 +1,4 @@
-* Tag Engine
+* Tag Engine [#Todo] Review
 
 
   The tag engine is how we control custom behavior in Orb.
@@ -9,7 +9,7 @@ We have two kinds of tag in Orb: a hashtag, =#LikeSo=, and a handle which is a
 Handles refer to something else, generally a part of an Orb document, be it
 the document containing the handle, or another.
 
-Hashags are internal to Orb.  While the user will generally define every
+Hashtags are internal to Orb.  While the user will generally define every
 handle they use, handles are in effect the keywords of Orb, and are linked to
 the runtime.
 

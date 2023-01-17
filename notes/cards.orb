@@ -70,7 +70,7 @@ of Orb as a payload, and the server must decide what to do with it.
 =!@sendvote= is a placeholder, basically. It should be read as "send the
 message =sendvote= to [something]"
 
-told you this will be a hot mess!
+Told you this will be a hot mess!
 
 Links and the tag engine need to be functional anyway, so this is all just
 an attempt to force the chaos in my brain to stop swirling around so I can

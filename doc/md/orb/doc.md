@@ -221,6 +221,15 @@ local Linkline = Twig:inherit "link_line"
 Linkline.toMarkdown = Twig.nullstring
 ```
 
+```lua
+local Clade, Node = use ("cluster:clade", "espalier:peg/node")
+```
+
+```lua
+local contract = {}
+
+local OrbClade = Clade(Node, contract):extend(contract)
+```
 
 ```lua
 local DocMetas = { Twig,
