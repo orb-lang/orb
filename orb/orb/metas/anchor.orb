@@ -51,6 +51,8 @@ elided.  =@project:folder/file=, therefore, is a reference across projects,
 with the same fully-qualified form as in =require=: the namespace is assumed
 to be the native namespace, unless provided, or overridden in the manifest.
 
+In deference to Unix, I might let =@./file= be a file in the same folder.
+
 It's valid to refer to just a project as well, as =@full.domain/project:= or
 =@project:= for the default domain.  This will resolve to a link to the repo
 root, unless the weaver is otherwise directed by the manifest.

@@ -1,0 +1,18 @@
+* Section Anchor
+
+
+#!peg @section_peg
+section <- (ws / word / invalid)+
+ws <- { \t}
+word <- (valid/invalid)+
+valid <- [A-Z] / [a-z] / [0-9] ; I think that's it?
+`invalid` <- !valid 1
+#/peg
+
+[*]: https://gist.github.com/asabaylus/3071099
+
+#!lua
+local function toSectionAnchor(str)
+   
+end
+#/lua
