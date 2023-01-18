@@ -114,7 +114,7 @@ s.angry = false
 
 
 
-local Doc      = require "orb:orb/doc"
+local Doc      = require "orb:orb/doc2"
 local knitter  = require "orb:knit/knit" ()
 local compiler = require "orb:compile/compiler"
 local database = require "orb:compile/database"

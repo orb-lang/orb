@@ -214,7 +214,7 @@ in\-place expansion of notebook\-style live documents\.
 ```lua
 function Skein.spin(skein)
    if not skein.source.text then
-      skein:load()
+      skein:filter()
    end
    local ok, doc = pcall(Doc, skein.source.text)
    if not ok then

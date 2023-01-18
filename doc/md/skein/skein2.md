@@ -1,120 +1,127 @@
-* Skein
+# Skein
 
 
-  A skein is an object for holding a Doc, with all its derivative works.
+  A skein is an object for holding a Doc, with all its derivative works\.
 
 The first toolchain was a bootstrap, which was accomplished by the simple
-expedient of perfect uniformity.  Every file in the =orb= directory of a
-project was presumed to have some Lua in it, and there is a one-to-one
-correspondence between =orb= on the one hand, and =src= on the other, same
-for the weave.  Every line of Lua is found in the same place as it is in the
-Orb file, and so on.
+expedient of perfect uniformity\.  Every file in the `orb` directory of a
+project was presumed to have some Lua in it, and there is a one\-to\-one
+correspondence between `orb` on the one hand, and `src` on the other, same
+for the weave\.  Every line of Lua is found in the same place as it is in the
+Orb file, and so on\.
 
 This was a useful paradigm, but now we have the new parser, and we need to
-walk back some of those design choices.  The Orb files must remain the source
+walk back some of those design choices\.  The Orb files must remain the source
 of truth, but everything else changes: Orb files may affect each other, mutate
 themselves and each other, both in ways which are written to disk and ways
 which are not, and may generate multiple artifacts of the same sort; or one
 Orb document may be a source of code in a knit or weave derived ultimately
-from another.
+from another\.
 
-We took this general-to-specific approach to the extreme where compilation in
-the old method is all-or-nothing.  We briefly had the ability to knit (but not
-weave) a single document, but surrendered it.
+We took this general\-to\-specific approach to the extreme where compilation in
+the old method is all\-or\-nothing\.  We briefly had the ability to knit \(but not
+weave\) a single document, but surrendered it\.
 
-Now we'll build from a single file outward.  We keep the semi-literate style
+Now we'll build from a single file outward\.  We keep the semi\-literate style
 for now, but make a single skein capable of everything that needs: parsing,
 formatting, spinning, knitting, weaving, and writing all changes to both the
-filesystem and the module database.
+filesystem and the module database\.
 
-Then we'll rebuild the Codex, with as few of the old assumptions as possible.
+Then we'll rebuild the Codex, with as few of the old assumptions as possible\.
 In particular, we'll leave out Decks at first, and add them back if they
-actually prove useful, which they might.  That gets us to feature-parity with
-the old compiler, which we may then remove.
+actually prove useful, which they might\.  That gets us to feature\-parity with
+the old compiler, which we may then remove\.
 
 With careful engineering, this will put us in a position for Docs to be
-dependent on other Docs, which we can resolve with inter-skein communication.
+dependent on other Docs, which we can resolve with inter\-skein communication\.
 
 
-** Instance fields
+## Instance fields
 
 These are successively created and manipulated over the course of actions
-taken on the skein.
+taken on the skein\.
+
 
 - lume:  A skein carrys a reference to its enclosing lume, which is
-         necessary to enable more complex kinds of inter-document activity.
+    necessary to enable more complex kinds of inter\-document activity\.
 
-         #Todo this needs to be more flexible and general.  The Lume, as
-         written, requires a codex-normal directory structure, has completely
-         walked it, has hooks into the =bridge.modules= database, and so on.
-         This needs to be appropriately generalized.
+    \#Todo this needs to be more flexible and general\.  The Lume, as
+    written, requires a codex\-normal directory structure, has completely
+    walked it, has hooks into the `bridge.modules` database, and so on\.
+    This needs to be appropriately generalized\.
 
-- note:  Annotations left by various operations.  Like a printf that the Skein
-         carries with it.
+
+- note:  Annotations left by various operations\.  Like a printf that the Skein
+    carries with it\.
+
 
 - source:  The artifacts of the source file:
 
-  - file:  The Path of the original document.
+  - file:  The Path of the original document\.
 
-  - text:  String representing the contents of the document file.
+  - text:  String representing the contents of the document file\.
 
-  - doc:  The Doc node corresponding to the parsed source doc.
+  - doc:  The Doc node corresponding to the parsed source doc\.
 
-  - modified:  #NYI, a flag to mark if the source document itself has been
-               modified and needs to be written to disk.
+  - modified:  \#NYI, a flag to mark if the source document itself has been
+      modified and needs to be written to disk\.
 
-- knitted:  The artifacts produced by knitting the source.  Currently, this is
-            a key-value map, where the key is the =code_type= field and the
-            value is a Scroll.
 
-- woven:  The artifacts produced by weaving the source.
+- knitted:  The artifacts produced by knitting the source\.  Currently, this is
+    a key\-value map, where the key is the `code_type` field and the
+    value is a Scroll\.
 
-  - md:  The Markdown weave of the source document.
 
-  - #Todo:
+- woven:  The artifacts produced by weaving the source\.
 
-    - html:  An HTML weave of the source document.
+  - md:  The Markdown weave of the source document\.
 
-    - dot:  A [[graphviz file][https://www.graphviz.org/doc/info/lang.html]]
-            of the Doc's Node structure.
+  - \#Todo:
 
-    - pdf:  Just kidding! Unless...
+    - html:  An HTML weave of the source document\.
+
+    - dot:  A [graphviz file](https://www.graphviz.org/doc/info/lang.html)
+        of the Doc's Node structure\.
+
+    - pdf:  Just kidding\! Unless\.\.\.
 
     - latex:  Same, basically
 
     - pandoc:  I mean, maybe?
 
+
 - bytecode:  Perhaps a misnomer; this is best defined as artifacts produced by
-             further compilation of the knit, suitable for writing to the
-             modules database or otherwise using in executable form.
+    further compilation of the knit, suitable for writing to the
+    modules database or otherwise using in executable form\.
 
-             For the core bridge modules, this is LuaJIT bytecode, but in
-             other cases it could be object code, or a .jar file, minified JS,
-             and the like.
-
-- completions:  #NYI.  These are closures with the necessary information to
-                provide the parameters needed to complete them. An example
-                would be a transclusion or macroexpansion which draws from a
-                namespace that isn't in the source file.
-
-                This is the only approach which generalizes across projects,
-                and across compilation scenarios:  We want, at the limit, to
-                be able to process a single source file, while opening and
-                processing only those additional files needed to complete its
-                cycle.
+    For the core bridge modules, this is LuaJIT bytecode, but in
+    other cases it could be object code, or a \.jar file, minified JS,
+    and the like\.
 
 
-**** imports
+- completions:  \#NYI\.  These are closures with the necessary information to
+    provide the parameters needed to complete them\. An example
+    would be a transclusion or macroexpansion which draws from a
+    namespace that isn't in the source file\.
 
-#!lua
+    This is the only approach which generalizes across projects,
+    and across compilation scenarios:  We want, at the limit, to
+    be able to process a single source file, while opening and
+    processing only those additional files needed to complete its
+    cycle\.
+
+
+#### imports
+
+```lua
 local s = require "status:status" ()
 local a = require "anterm:anterm"
 s.chatty = true
 s.angry = false
-#/lua
+```
 
-#!lua
-local Doc      = require "orb:orb/doc"
+```lua
+local Doc      = require "orb:orb/doc2"
 local knitter  = require "orb:knit/knit" ()
 local compiler = require "orb:compile/compiler"
 local database = require "orb:compile/database"
@@ -124,48 +131,48 @@ local File   = require "fs:fs/file"
 local Path   = require "fs:fs/path"
 local Scroll = require "scroll:scroll"
 local Notary = require "status:annotate"
-#/lua
+```
 
-#!lua
+```lua
 local Skein = {}
 Skein.__index = Skein
-#/lua
+```
 
 
-** Skein Stage Methods
+## Skein Stage Methods
 
   Skeins are in the chaining style: all methods return the skein at the
-bottom. If additional return values become necessary, they may be supplied
-after.
+bottom\. If additional return values become necessary, they may be supplied
+after\.
 
 The methods in this section are the basic stages of the Orb tailoring process,
-and are presented in order.  Calling any later stage method should
-automatically trigger all missing stages, failure to do so is a bug.
+and are presented in order\.  Calling any later stage method should
+automatically trigger all missing stages, failure to do so is a bug\.
 
-This offers a chance to optimize with caching (although we don't yet), and
-makes using Skeins in the helm repl less tedious.
+This offers a chance to optimize with caching \(although we don't yet\), and
+makes using Skeins in the helm repl less tedious\.
 
 The stage methods should be idempotent if the Skein doesn't have reason to
-perform them a second time, but they aren't.
+perform them a second time, but they aren't\.
 
 The state created and manipulated by method calls is attached to the skein
 itself, all stage methods return only the Skein, and either handle errors
-internally or throw them.
+internally or throw them\.
 
 
-**** Next Steps With Stage Methods
+#### Next Steps With Stage Methods
 
   We don't use parameters in most stage methods at all, and
 
 
-*** Skein:load()
+### Skein:load\(\)
 
-This loads the Path data into the =skein.source.text= field.
+This loads the Path data into the `skein.source.text` field\.
 
 If called inside a coroutine and uv event loop, this uses a callback, allowing
-us to employ the threadpool for parallelizing the syscall and read penalty.
+us to employ the threadpool for parallelizing the syscall and read penalty\.
 
-#!lua
+```lua
 function Skein.load(skein)
    local file = assert(skein.source.file, "no file on skein")
    local ok, text = pcall(file.read, file)
@@ -176,35 +183,35 @@ function Skein.load(skein)
    end
    return skein
 end
-#/lua
+```
 
 
-*** Skein:filter()
+### Skein:filter\(\)
 
-Optional step which mostly replaces tabs in the non-codeblock portions of the
-text.  Any changes will flip the =modified= flag.
+Optional step which mostly replaces tabs in the non\-codeblock portions of the
+text\.  Any changes will flip the `modified` flag\.
 
-Currently a no-op.
+Currently a no\-op\.
 
 
-#!lua
+```lua
 function Skein.filter(skein)
    if not skein.source.text then
       skein:load()
    end
    return skein
 end
-#/lua
+```
 
 
-*** Skein:spin()
+### Skein:spin\(\)
 
-This spins the textual source into a parsed document.
+This spins the textual source into a parsed document\.
 
-It will eventually perform some amount of post-processing as well, such as
-in-place expansion of notebook-style live documents.
+It will eventually perform some amount of post\-processing as well, such as
+in\-place expansion of notebook\-style live documents\.
 
-#!lua
+```lua
 function Skein.spin(skein)
    if not skein.source.text then
       skein:filter()
@@ -216,28 +223,28 @@ function Skein.spin(skein)
    skein.source.doc = doc
    return skein
 end
-#/lua
+```
 
 
-*** Skein:tag()
+### Skein:tag\(\)
 
-This one is immodestly complex, and gets implemented in its own module.
+This one is immodestly complex, and gets implemented in its own module\.
 
-This is called within =:spin=.
+This is called within `:spin`\.
 
-#!lua
+```lua
 Skein.tag = require "orb:tag/tagger"
-#/lua
+```
 
 
-*** Skein:tagAct()
+### Skein:tagAct\(\)
 
-Actions taken as part of the =:spin= which are made possible by tagging.
+Actions taken as part of the `:spin` which are made possible by tagging\.
 
-Right now, this is checking for a #manifest codeblock, instantiating a new
-instance of the Manifest, and adding the contents.
+Right now, this is checking for a \#manifest codeblock, instantiating a new
+instance of the Manifest, and adding the contents\.
 
-#!lua
+```lua
 function Skein.tagAct(skein)
    if not skein.tags then
       skein:tag()
@@ -257,27 +264,27 @@ function Skein.tagAct(skein)
    end
    return skein
 end
-#/lua
+```
 
 
-*** Skein:format()
+### Skein:format\(\)
 
-#NYI, this will perform formatting inside the Orb portion of documents.
+\#NYI
 
-#!lua
+```lua
 function Skein.format(skein)
    return skein
 end
-#/lua
+```
 
 
-*** Skein:knit()
+### Skein:knit\(\)
 
-Produces sorcery, derived 'source code' in the more usual sense.
+Produces sorcery, derived 'source code' in the more usual sense\.
 
-Referred to as a 'tangle' in the traditional literate coding style.
+Referred to as a 'tangle' in the traditional literate coding style\.
 
-#!lua
+```lua
 function Skein.knit(skein)
    if not skein.tag_acted then
       skein:tagAct()
@@ -292,27 +299,27 @@ function Skein.knit(skein)
    end
    return skein
 end
-#/lua
+```
 
 
-*** Skein:weave()
+### Skein:weave\(\)
 
-This produces derived human-readable documents from the source.
+This produces derived human\-readable documents from the source\.
 
 We currently produce only Markdown, and as such, there isn't a Weaver instance,
-instead, we simply do everything inside the method.
+instead, we simply do everything inside the method\.
 
-The roadmap will favor HTML as the first-class output format.
+The roadmap will favor HTML as the first\-class output format\.
 
 This will probably take parameters to specify subcategories of possible
 documents; by default, it will produce all the rendered formats it is capable
-of producing.
+of producing\.
 
-Eventually, =weaver:weave(skein)= should be the entire method for
-=Skein:weave()=, and Scroll will be a dependency of that module, not of Skein
-itself.
+Eventually, `weaver:weave(skein)` should be the entire method for
+`Skein:weave()`, and Scroll will be a dependency of that module, not of Skein
+itself\.
 
-#!lua
+```lua
 function Skein.weave(skein)
    if not skein.knitted then
       skein:knit()
@@ -347,74 +354,74 @@ function Skein.weave(skein)
    end
    return skein
 end
-#/lua
+```
 
 
-*** Skein:compile()
+### Skein:compile\(\)
 
-Takes a knitted Skein and compiles the Scroll if it knows how.
+Takes a knitted Skein and compiles the Scroll if it knows how\.
 
 "Compile" in this case means: check for syntax errors, and render into a form
-suitable for persistance into the database, and/or further processing.
+suitable for persistance into the database, and/or further processing\.
 
 It's unclear what this stage will look like for, in particular, C files; it's
-perfectly clear what it looks like for our default, semi-literate golden path
-for Lua artifacts, so we'll start there.
+perfectly clear what it looks like for our default, semi\-literate golden path
+for Lua artifacts, so we'll start there\.
 
-#!lua
+```lua
 function Skein.compile(skein)
    if not skein.knitted then skein:knit() end
 
    compiler:compile(skein)
    return skein
 end
-#/lua
+```
 
 
-*** Skein:tailor()
+### Skein:tailor\(\)
 
-Do every operation on the Skein of which the skein is capable.
+Do every operation on the Skein of which the skein is capable\.
 
-This is currently a no-op if =:compile= has been called, but probably won't
-stay that way.  The API guarantee is that all the stage methods will be
-called if =:tailor= is sent, no matter what particular order and
-intermediates might exist.
+This is currently a no\-op if `:compile` has been called, but probably won't
+stay that way\.  The API guarantee is that all the stage methods will be
+called if `:tailor` is sent, no matter what particular order and
+intermediates might exist\.
 
-We unroll the methods in the Lume, currently, but this is mostly didactic.
+We unroll the methods in the Lume, currently, but this is mostly didactic\.
 
-#!lua
+```lua
 function Skein.tailor(skein)
    if not skein.compiled then skein:compile() end
 
    return skein
 end
-#/lua
+```
 
 
-** Output Methods
+## Output Methods
 
-These put various skein contents into databases or the file system.
+These put various skein contents into databases or the file system\.
 
 This was an expedient way to code the logic, but I don't like that we hand in
 a control surface for the database and have the Skein work on itself, I would
-prefer a method which provides a commit-ready table which the Lume could take
-action on.
+prefer a method which provides a commit\-ready table which the Lume could take
+action on\.
 
 Similarly, and worse, Skeins are carrying around a whole Lume so they can
-write themselves to the file system.  Skeins should know where things are
-/supposed/ to go, and should provide the strings and expected locations for
-the files with a method.
+write themselves to the file system\.  Skeins should know where things are
+*supposed* to go, and should provide the strings and expected locations for
+the files with a method\.
 
-The more I think about it, the less I like Skeins writing to the file system.
-I'm not even sure they should be /reading/ from it, but one step at a time.
+The more I think about it, the less I like Skeins writing to the file system\.
+I'm not even sure they should be *reading* from it, but one step at a time\.
 
 
-*** Skein:commit(stmts)
+### Skein:commit\(stmts\)
 
 This commits modules to the database, provided with a collection of prepared
-statements sufficient to complete the operation.
+statements sufficient to complete the operation\.
 
-#!lua
+```lua
 local commitSkein = assert(database.commitSkein)
 
 function Skein.commit(skein, stmts, ids, git_info, now)
@@ -426,32 +433,32 @@ function Skein.commit(skein, stmts, ids, git_info, now)
    commitSkein(skein, stmts, ids, git_info, now)
    return skein
 end
-#/lua
+```
 
 
-*** Skein:forModuleDatabase()
+### Skein:forModuleDatabase\(\)
 
-Produces a table intended for committing to the module database.
+Produces a table intended for committing to the module database\.
 
-#!lua
+```lua
 function Skein.forModuleDatabase(skein)
    local artifacts = skein.compiled and skein.compiled.lua
    return { bytecode = artifacts,
             name = tostring(skein.source.file) }
 end
-#/lua
+```
 
 
-*** Skein:transact(stmts)
+### Skein:transact\(stmts\)
 
-This calls =:commit= inside a transaction, for use in file-watcher mode and
-any other context where the commit itself is a full transaction.
+This calls `:commit` inside a transaction, for use in file\-watcher mode and
+any other context where the commit itself is a full transaction\.
 
-Necessary because the module and code are written out separately.
+Necessary because the module and code are written out separately\.
 
-=now= is an optional field, which is provided by the database if left out.
+`now` is an optional field, which is provided by the database if left out\.
 
-#!lua
+```lua
 function Skein.transact(skein, stmts, ids, git_info, now)
    assert(stmts)
    assert(ids)
@@ -461,20 +468,20 @@ function Skein.transact(skein, stmts, ids, git_info, now)
    skein.lume.db.commit()
    return skein
 end
-#/lua
+```
 
 
-*** Skein:persist()
+### Skein:persist\(\)
 
-Writes derived documents out to the appropriate areas of the filesystem.
+Writes derived documents out to the appropriate areas of the filesystem\.
 
 
-**** writeOnChange(scroll, dont_write)
+#### writeOnChange\(scroll, dont\_write\)
 
-Compares the new file with the old one. If there's a change, prints the name
-of the file, and writes it out.
+Compares the new file with the old one\. If there's a change, prints the name
+of the file, and writes it out\.
 
-#!lua
+```lua
 local function writeOnChange(scroll, path, dont_write)
    -- if we don't have a path, there's nothing to be done
    -- #todo we should probably take some note of this situation
@@ -492,9 +499,9 @@ local function writeOnChange(scroll, path, dont_write)
       return nil
    end
 end
-#/lua
+```
 
-#!lua
+```lua
 function Skein.persist(skein)
    for code_type, scroll in pairs(skein.knitted) do
       if scroll.idEst == Scroll then
@@ -509,17 +516,17 @@ function Skein.persist(skein)
    end
    return skein
 end
-#/lua
+```
 
 
-*** Skein:transform()
+### Skein:transform\(\)
 
-Does the whole dance.
+Does the whole dance\.
 
 We need some better way to get all the database machinery decorated onto the
-Skein, because currently we overuse parameters for that.
+Skein, because currently we overuse parameters for that\.
 
-#!lua
+```lua
 function Skein.transform(skein)
    local db = skein.lume.db
    skein
@@ -535,55 +542,55 @@ function Skein.transform(skein)
      : persist()
    return skein
 end
-#/lua
+```
 
 
-** Reports
+## Reports
 
 There's a lot of reaching into the Skein for things, and most of this should
-be replaced with reporting methods.
+be replaced with reporting methods\.
 
 The chaining methods will all perform prior stages if they are missing
-information, the opposite applies to reports.
+information, the opposite applies to reports\.
 
 Report methods make two guarantees, in fact: they won't trigger any stage
-methods, and they won't mutate any data on the Skein.
+methods, and they won't mutate any data on the Skein\.
 
 
-*** Skein:tagsFor(node)
+### Skein:tagsFor\(node\)
 
 We have a map of Nodes which are tagged by the tagger, to a set of those tags,
-or nil.
+or nil\.
 
 This lets us return a "no tags" empty set so that we don't have to keep
 looking for an empty set of tags before checking what we want to know, which
-is if a tag applies.
+is if a tag applies\.
 
 
-**** empty_set
+#### empty\_set
 
-This will return =nil= for =empty_set(val)= and =empty_set[val]=, at least for
-tables, which are what the elements are. This is forward compatible with the
-upcoming switch to =core.set=, which uses ordinary indexing.
+This will return `nil` for `empty_set(val)` and `empty_set[val]`, at least for
+tables, which are what the elements are\. This is forward compatible with the
+upcoming switch to `core.set`, which uses ordinary indexing\.
 
-#!lua
+```lua
 local empty_set = require "set:set" ()
 
 function Skein.tagsFor(skein, node)
    local tags = assert(skein.tags, "Skein has not been tagged")
    return tags[node] or empty_set
 end
-#/lua
+```
 
 
-*** Skein:knitScroll(knitter)
+### Skein:knitScroll\(knitter\)
 
-Makes a Scroll if it doesn't have one.
+Makes a Scroll if it doesn't have one\.
 
 Here we can also swap a Case for plantuml, and eventually do some actually
-sophisticated things with manifests and tags.
+sophisticated things with manifests and tags\.
 
-#!lua
+```lua
 function Skein.knitScroll(skein, knitter)
    local code_type, knitted = knitter.code_type, skein.knitted
    -- Right now we always return the same value
@@ -604,35 +611,35 @@ function Skein.knitScroll(skein, knitter)
    scroll.path = skein:knitPathFor(code_type)
    return scroll
 end
-#/lua
+```
 
 
-**** Skein:knitPathFor(code_type)
+#### Skein:knitPathFor\(code\_type\)
 
-This lets us get at the Manifest to direct it eventually.
+This lets us get at the Manifest to direct it eventually\.
 
-#!lua
+```lua
 function Skein.knitPathFor(skein, code_type)
    return skein.source.file.path
                     :subFor(skein.source_base,
                             skein.knit_base,
                             code_type)
 end
-#/lua
+```
 
 
-*** Skein:
+### Skein:
 
 
-*** new(path, lume)
+### new\(path, lume\)
 
 Takes a path to the source document, which may be either a Path or a bare
-string.
+string\.
 
 Also receives the handle of the enclosing lume, which we aren't using yet,
-and might not need.
+and might not need\.
 
-#!lua
+```lua
 local function new(path, lume)
    local skein = setmetatable({}, Skein)
    skein.note = Notary()
@@ -666,9 +673,9 @@ local function new(path, lume)
 end
 
 Skein.idEst = new
-#/lua
+```
 
 
-#!lua
+```lua
 return new
-#/lua
+```

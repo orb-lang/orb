@@ -11,9 +11,3 @@ It is the first of its kind.
 
 random = "https://example.com/random/"
 #/toml
-
-let's add a codeblock of the wrong kind with the right tag:
-
-#!peg #manifest
-aaa <- "a"+
-#/peg
