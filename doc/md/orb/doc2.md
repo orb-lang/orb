@@ -18,8 +18,14 @@ performed once parsing is completed\.
 #### imports
 
 ```lua
+local core, cluster = use ('qor:core', 'cluster:cluster')
+
+local table = core.table
+
 local Peg   = require "espalier:peg"
-local table = require "core:core/table"
+local Vav, Mem = use ('espalier:vav',
+                      'espalier:peg/mem',
+                      'espalier:peg/nodeclade')
 ```
 
 
@@ -195,62 +201,12 @@ local function post(doc)
 end
 ```
 
-
-### Doc metatables
-
-This is a mix of actual metatables, and Grammar functions which produce the
-subsidiary parsing structure of a given document\.
-
-
-#### Linkline
-
-  Our `link-line` rule is a bit of a special case, because it's handled inside
-the associated `link` for the most part\.
-
-If it turns out we need complex behavior, I'll move this inside its own
-module\.
-
-\#Todo
-critical for Markdown, where, after all, we don't have stack traces\.
-
-\#Todo
-
 ```lua
-local Linkline = Twig:inherit "link_line"
-
-Linkline.toMarkdown = Twig.nullstring
+local doc_peh = Doc_str
+local dVav = Vav(doc_peh)
 ```
 
-```lua
-local Clade, Node = use ("cluster:clade", "espalier:peg/node")
-```
 
 ```lua
-local contract = {}
-
-local OrbClade = Clade(Node, contract):extend(contract)
-```
-
-```lua
-local DocMetas = { Twig,
-                   header       = Header,
-                   codeblock    = Codeblock,
-                   table        = Table,
-                   prose        = Prose,
-                   blockquote   = Prose,
-                   list         = List,
-                   list_line    = Listline,
-                   numlist_line = Listline,
-                   note_body    = Prose,
-                   link_line    = Linkline, }
-```
-
-```lua
-local addall = assert(table.addall)
-
-addall(DocMetas, require "orb:orb/metas/docmetas")
-```
-
-```lua
-return Peg(Doc_str, DocMetas, nil, post)
+return dVav -- for now
 ```

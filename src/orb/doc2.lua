@@ -18,8 +18,14 @@
 
 
 
+local core, cluster = use ('qor:core', 'cluster:cluster')
+
+local table = core.table
+
 local Peg   = require "espalier:peg"
-local table = require "core:core/table"
+local Vav, Mem = use ('espalier:vav',
+                      'espalier:peg/mem',
+                      'espalier:peg/nodeclade')
 
 
 
@@ -196,61 +202,11 @@ end
 
 
 
+local doc_peh = Doc_str
+local dVav = Vav(doc_peh)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local Linkline = Twig:inherit "link_line"
-
-Linkline.toMarkdown = Twig.nullstring
-
-
-
-local Clade, Node = use ("cluster:clade", "espalier:peg/node")
-
-
-
-local contract = {}
-
-local OrbClade = Clade(Node, contract):extend(contract)
-
-
-
-local DocMetas = { Twig,
-                   header       = Header,
-                   codeblock    = Codeblock,
-                   table        = Table,
-                   prose        = Prose,
-                   blockquote   = Prose,
-                   list         = List,
-                   list_line    = Listline,
-                   numlist_line = Listline,
-                   note_body    = Prose,
-                   link_line    = Linkline, }
-
-
-
-local addall = assert(table.addall)
-
-addall(DocMetas, require "orb:orb/metas/docmetas")
-
-
-
-return Peg(Doc_str, DocMetas, nil, post)
+return dVav -- for now
 
